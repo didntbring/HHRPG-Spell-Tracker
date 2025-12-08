@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HHRPG Spells & Inventory</title>
     
-    <!-- PWA INTEGRATION: Link the Manifest (will be injected by JS) -->
-    <!-- <link rel="manifest" href="/manifest.json"> -->
+    <!-- PWA INTEGRATION: Link the Manifest -->
+    <link rel="manifest" href="/manifest.json">
     
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1356,10 +1356,7 @@
                 link.href = manifestURL;
                 document.head.appendChild(link);
                 
-                // --- REMOVED SERVICE WORKER REGISTRATION HERE TO FIX THE ERROR ---
-                
-                /*
-                // PWA Registration Script (Causes errors in some sandboxed environments)
+                // PWA Registration Script (MUST be added here for the steps to work)
                 if ('serviceWorker' in navigator) {
                     window.addEventListener('load', () => {
                         // The path to service-worker.js will be relative to the root URL
@@ -1374,8 +1371,6 @@
                 } else {
                     console.log("Service Workers not supported in this browser.");
                 }
-                */
-               
             } catch (e) {
                 console.error('PWA: Failed to inject manifest link or register Service Worker:', e);
             }
