@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HHRPG Spells & Inventory</title>
+    
+    <!-- PWA INTEGRATION: Link the Manifest (will be injected by JS) -->
+    <!-- <link rel="manifest" href="/manifest.json"> -->
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Slate 100 */
+        }
+        .main-card {
+            box-shadow: 0 0px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tab-button {
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            border-color: #4f46e5;
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.5);
+        }
+        /* Modal backdrop style */
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="app" class="main-card bg-white p-8 md:p-12 rounded-xl w-full max-w-3xl text-center">
+        <!-- Main Header -->
+        <h1 class="text-4xl font-extrabold mb-6 text-indigo-700">HHRPG Spells & Inventory</h1>
+
+        <!-- Tab Navigation -->
+        <div class="flex justify-center space-x-2 sm:space-x-4 mb-8 flex-wrap">
+            <button id="tab-spells" onclick="window.switchTab('spells')" 
+                    class="tab-button px-3 py-2 text-sm sm:text-base rounded-full border border-indigo-500 text-indigo-700 bg-indigo-100 hover:bg-indigo-50 hover:text-indigo-800 transition duration-200 font-semibold mb-2 sm:mb-0">
+                All Spells
+            </button>
+            <button id="tab-my-spells" onclick="window.switchTab('my-spells')" 
+                    class="tab-button px-3 py-2 text-sm sm:text-base rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition duration-200 font-semibold mb-2 sm:mb-0">
+                My Spells
+            </button>
+            <button id="tab-profile" onclick="window.switchTab('profile')" 
+                    class="tab-button px-3 py-2 text-sm sm:text-base rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition duration-200 font-semibold mb-2 sm:mb-0">
+                Character Profile
+            </button>
+             <button id="tab-items" onclick="window.switchTab('items')" 
+                    class="tab-button px-3 py-2 text-sm sm:text-base rounded-full border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition duration-200 font-semibold mb-2 sm:mb-0">
+                Item List
+            </button>
+        </div>
+
+        <div id="loading" class="text-center p-8">
+            <svg class="animate-spin h-8 w-8 text-indigo-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-3 text-indigo-600">Connecting and loading data...</p>
+        </div>
+
+        <div id="content" class="hidden text-left">
+            
+            <!-- 1. CHARACTER PROFILE VIEW -->
+            <div id="profile-view" class="hidden">
+                <div class="mb-6 p-4 rounded-xl bg-green-50 text-sm text-green-800 border border-green-200">
+                    <p class="font-bold">Persistent Data Notice:</p>
+                    <p>This character's data is saved to the cloud and is unique to your user session, ensuring your profile, spells, and inventory are preserved every time you open the app on this or any other device. Your friend's data is completely separate.</p>
+                </div>
+
+                <div id="character-card" class="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
+                    <h2 class="text-2xl font-bold mb-4 text-indigo-800 text-center">
+                        Character Profile Data
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Character Name Input -->
+                        <div>
+                            <label for="char-name-input" class="block text-sm font-medium text-gray-700 mb-1 text-left">Character Name:</label>
+                            <input type="text" id="char-name-input" placeholder="Enter character name" 
+                                   class="w-full p-2 border border-indigo-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                        </div>
+                        
+                        <!-- Level Selection (NEW) -->
+                        <div id="level-selection-container">
+                            <!-- Level Dropdown will be generated here by JS -->
+                        </div>
+
+                        <!-- Hall Selection (Dropdown) -->
+                        <div id="hall-selection-container">
+                            <!-- Hall Dropdown will be generated here by JS -->
+                        </div>
+
+                        <!-- FP Points Selection (New) -->
+                        <div id="fp-selection-container">
+                             <!-- FP Dropdown will be generated here by JS -->
+                        </div>
+
+                        <!-- Stats Input (Dropdowns) -->
+                        <div id="stats-dropdown-container" class="grid grid-cols-2 gap-4">
+                            <!-- Dropdowns will be generated here by JS -->
+                        </div>
+
+                        <p id="stats-save-status" class="text-xs text-green-700 mt-4 text-right italic">Saved automatically.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. ALL SPELL LIST VIEW -->
+            <div id="spells-view" class="hidden">
+                <!-- Search and Filter Controls -->
+                <div class="bg-gray-100 p-4 rounded-xl mb-6 shadow-inner border border-gray-200">
+                    <!-- Search Input -->
+                    <input type="text" id="search-input" placeholder="Search spells by name, description, or requirement..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 mb-4 transition duration-150">
+                    
+                    <!-- Filter Controls Container -->
+                    <div class="grid grid-cols-1 gap-4">
+                        
+                        <!-- Filter By Rarity Dropdown -->
+                        <select id="rarity-filter-select" class="p-2 border border-gray-300 rounded-lg bg-white appearance-none cursor-pointer">
+                            <option value="">Filter By Rarity (All)</option>
+                            <!-- Rarity options will be populated here -->
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Dynamic Spell List Section -->
+                <div class="pt-6 border-t border-gray-200">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 text-center">All Spells</h2>
+                    <div id="spell-list-status" class="text-center text-sm text-gray-500 mb-4">
+                        Loading spells...
+                    </div>
+                    <div id="spell-list" class="space-y-4">
+                        <!-- Spells will be injected here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3. MY SPELLS VIEW -->
+            <div id="my-spells-view" class="hidden">
+                 <div class="pt-6">
+                    <!-- FP Tracker Header (New) -->
+                    <div class="bg-indigo-600 rounded-xl p-4 mb-6 shadow-md text-white flex items-center justify-between">
+                        <div>
+                            <span class="text-indigo-200 text-xs font-bold uppercase tracking-wider">Current FP</span>
+                            <div class="text-3xl font-extrabold flex items-center">
+                                <span id="fp-display-value">--</span>
+                                <span class="text-sm font-normal text-indigo-300 ml-2">pts</span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                             <button onclick="window.adjustFp(-1)" class="bg-indigo-700 hover:bg-indigo-800 text-white border border-indigo-500 font-bold py-2 px-4 rounded-lg shadow-sm transition transform active:scale-95 flex flex-col items-center min-w-[70px]">
+                                <span class="text-xs uppercase opacity-75">Use</span>
+                                <span class="text-lg leading-none">-1</span>
+                            </button>
+                            <button onclick="window.adjustFp(1)" class="bg-white hover:bg-indigo-50 text-indigo-700 border border-transparent font-bold py-2 px-4 rounded-lg shadow-sm transition transform active:scale-95 flex flex-col items-center min-w-[70px]">
+                                <span class="text-xs uppercase opacity-75">Refill</span>
+                                <span class="text-lg leading-none">+1</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800 text-center">Spells I Meet Requirements For</h2>
+                    <div id="my-spell-list-status" class="text-center text-sm text-gray-500 mb-4">
+                        Set your stats in the Character Profile to filter this list.
+                    </div>
+                    <div id="my-spell-list" class="space-y-4">
+                        <!-- My Spells will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ITEM LIST VIEW (NEW) -->
+            <div id="items-view" class="hidden">
+                <div class="flex justify-between items-center mb-6 pt-6 border-t border-gray-200">
+                    <h2 class="text-2xl font-bold text-gray-800">Inventory</h2>
+                    <button onclick="window.openAddItemModal()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 transform active:scale-95 flex items-center">
+                        <!-- Plus icon for "Add Item" -->
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Add Item
+                    </button>
+                </div>
+                
+                <div id="item-list-status" class="text-center text-sm text-gray-500 mb-4">
+                    Loading inventory...
+                </div>
+                <div id="item-list" class="space-y-4">
+                    <!-- Items will be injected here -->
+                </div>
+            </div>
+
+
+            <!-- User Info -->
+            <div class="mt-8 pt-4 border-t border-gray-100 text-sm text-gray-400 text-center">
+                User ID: <span id="user-id" class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ADD ITEM MODAL (NEW) -->
+    <div id="add-item-modal" class="hidden fixed inset-0 z-50 overflow-y-auto modal-backdrop flex items-center justify-center">
+        <div class="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all scale-100">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900">Add New Inventory Item</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition" onclick="window.closeAddItemModal()">
+                    <!-- Close icon -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body (Form) -->
+            <div class="mt-4 space-y-4">
+                <div>
+                    <label for="item-name-input" class="block text-sm font-medium text-gray-700 mb-1">Item Name:</label>
+                    <input type="text" id="item-name-input" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Potion of Healing">
+                </div>
+                <div>
+                    <label for="item-amount-input" class="block text-sm font-medium text-gray-700 mb-1">Amount (Quantity):</label>
+                    <input type="number" id="item-amount-input" value="1" min="1" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="item-description-input" class="block text-sm font-medium text-gray-700 mb-1">Description:</label>
+                    <textarea id="item-description-input" rows="3" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="A brief description of the item's properties or source."></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer (Save Button) -->
+            <div class="mt-6 flex justify-end">
+                <button type="button" onclick="window.saveItem()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 transform active:scale-95">
+                    Save Item
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- The script block MUST have type="module" for Firebase CDN imports -->
+    <script type="module">
+        // Import necessary Firebase modules from the CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // setDoc is used for both adding (with ID) and updating
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Set log level to debug for troubleshooting
+        setLogLevel('debug');
+        
+        // Global Firebase instances and state
+        let app, auth, db;
+        let userId = null;
+        let allSpells = []; // Global array to hold all fetched spells
+        let allItems = []; // NEW: Global array to hold all fetched items
+        // characterStats now includes 'level', 'hall', 'fp', and the normal stats
+        let currentCharacterStats = {}; 
+        // userLearnedSpells holds status objects: { spellId: { isKnown: true, favorite: false } }
+        let userLearnedSpells = {}; 
+        let currentTab = 'spells'; // Track the currently active tab
+        
+        // Global variables for long press logic (NEW)
+        let pressTimer = null;
+        const LONG_PRESS_THRESHOLD = 500; // ms
+        
+        // Firestore Path Constants
+        // These paths ensure persistence and isolation: data is saved under the user's ID.
+        const CHARACTER_COLLECTION = 'character_data';
+        const LEARNED_SPELLS_COLLECTION = 'learned_spells';
+        const ITEM_COLLECTION = 'item_list'; 
+        const CHARACTER_DOC_ID = 'profile';
+
+        // Stat Definitions (Kept for completeness)
+        const ELEMENT_STATS = ['Fire', 'Water', 'Earth', 'Air', 'Spirit'];
+        const ATTRIBUTE_STATS = ['Strength', 'Wisdom', 'Intelligence', 'Charisma', 'Dexterity', 'Constitution'];
+        const ALL_STATS = [...ELEMENT_STATS, ...ATTRIBUTE_STATS];
+        const ELEMENT_RANGE = Array.from({ length: 11 }, (_, i) => i); // 0, 1, 2, ..., 10
+        const ATTRIBUTE_RANGE = Array.from({ length: 13 }, (_, i) => i + 8); // 8 to 20
+        const FP_RANGE = Array.from({ length: 31 }, (_, i) => i); // 0 to 30
+
+        // Hall Options
+        const HALL_OPTIONS = [
+            'Arcanium', 'Assassins', 'Animalians', 'Coterie', 'Alchemists', 
+            'Stone Singers', 'Oestomancers', 'Metallum Nocturn', 'Aura Healers', 'Protectors',
+        ];
+        // Level Options
+        const LEVEL_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1); // 1 to 20
+
+        // Mapping for common attribute abbreviations found in spell requirements
+        const STAT_MAPPING = {
+            'str': 'Strength', 'dex': 'Dexterity', 'con': 'Constitution',
+            'int': 'Intelligence', 'wis': 'Wisdom', 'cha': 'Charisma',
+            'fire': 'Fire', 'water': 'Water', 'earth': 'Earth', 'air': 'Air', 'spirit': 'Spirit'
+        };
+
+        // Rarity constants for easy comparison
+        const RARITY_COMMON = 'Common';
+        const RARITY_UNCOMMON = 'Uncommon';
+        const RARITY_RARE = 'Rare';
+        const RARITY_LEGENDARY = 'Legendary'; 
+
+        // Configuration and Initialization
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+
+        // IMPORTANT: REPLACE THIS URL WITH YOUR PUBLISHED GOOGLE SHEET CSV LINK
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR5vedjHq3EqReJ3fiY25GulNxTV_a3k1ch4jjzBlDpKbuNRd9wUxcBcCCbnlceTwB5LG7k16Phn83j/pub?gid=0&single=true&output=csv';
+
+        // UI elements
+        const loadingElement = document.getElementById('loading');
+        const contentElement = document.getElementById('content');
+        const userIdElement = document.getElementById('user-id');
+        
+        // Tab View elements
+        const spellsView = document.getElementById('spells-view');
+        const profileView = document.getElementById('profile-view');
+        const mySpellsView = document.getElementById('my-spells-view');
+        const itemsView = document.getElementById('items-view'); 
+        const tabButtons = {
+            'spells': document.getElementById('tab-spells'),
+            'profile': document.getElementById('tab-profile'),
+            'my-spells': document.getElementById('tab-my-spells'),
+            'items': document.getElementById('tab-items') 
+        };
+
+        // All Spells Tab UI elements
+        const spellListElement = document.getElementById('spell-list');
+        const spellListStatusElement = document.getElementById('spell-list-status');
+        const searchInput = document.getElementById('search-input');
+        const rarityFilterSelect = document.getElementById('rarity-filter-select');
+        
+        // My Spells Tab UI elements
+        const mySpellListElement = document.getElementById('my-spell-list'); 
+        const mySpellListStatusElement = document.getElementById('my-spell-list-status'); 
+        const fpDisplayValue = document.getElementById('fp-display-value');
+        
+        // Character UI elements
+        const charNameInput = document.getElementById('char-name-input');
+        const levelSelectionContainer = document.getElementById('level-selection-container'); 
+        const hallSelectionContainer = document.getElementById('hall-selection-container'); 
+        const fpSelectionContainer = document.getElementById('fp-selection-container'); 
+        const statsDropdownContainer = document.getElementById('stats-dropdown-container'); 
+        const statsSaveStatus = document.getElementById('stats-save-status');
+
+        // Item List UI elements 
+        const itemListElement = document.getElementById('item-list');
+        const itemListStatusElement = document.getElementById('item-list-status');
+        const addItemModal = document.getElementById('add-item-modal');
+        const itemNameInput = document.getElementById('item-name-input');
+        const itemAmountInput = document.getElementById('item-amount-input');
+        const itemDescriptionInput = document.getElementById('item-description-input');
+
+
+        // Debounce function for saving data
+        const debounce = (func, delay) => {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        };
+        
+        // --- Tab Navigation Logic ---
+        window.switchTab = function(tabId) {
+            currentTab = tabId; // Update global tab state
+
+            // Hide all views
+            spellsView.classList.add('hidden');
+            profileView.classList.add('hidden');
+            mySpellsView.classList.add('hidden');
+            itemsView.classList.add('hidden'); 
+            
+            // Deactivate all buttons
+            Object.values(tabButtons).forEach(btn => btn.classList.remove('active', 'bg-indigo-100', 'text-indigo-700', 'border-indigo-500'));
+            Object.values(tabButtons).forEach(btn => btn.classList.add('border-gray-300', 'text-gray-700', 'bg-white'));
+
+
+            // Show selected view and activate button
+            let activeView;
+            if (tabId === 'spells') {
+                activeView = spellsView;
+                handleSearchAndFilter(); 
+            } else if (tabId === 'profile') {
+                activeView = profileView;
+            } else if (tabId === 'my-spells') {
+                activeView = mySpellsView;
+                renderMySpells(); 
+            } else if (tabId === 'items') { 
+                activeView = itemsView;
+                renderItems();
+            }
+
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                tabButtons[tabId].classList.add('active');
+                tabButtons[tabId].classList.remove('border-gray-300', 'text-gray-700', 'bg-white');
+                tabButtons[tabId].classList.add('border-indigo-500', 'text-indigo-700', 'bg-indigo-100');
+            }
+        };
+
+        // --- Character Profile Dropdown Generation ---
+
+        function generateStatDropdowns() {
+            // 1. Clear containers
+            levelSelectionContainer.innerHTML = ''; 
+            hallSelectionContainer.innerHTML = '';
+            fpSelectionContainer.innerHTML = '';
+            statsDropdownContainer.innerHTML = '';
+
+            // 2. Generate Level Dropdown
+            const levelId = 'level-input-select';
+            const levelOptionsHtml = LEVEL_OPTIONS.map(val => 
+                `<option value="${val}">${val}</option>`
+            ).join('');
+
+            levelSelectionContainer.innerHTML = `
+                <div>
+                    <label for="${levelId}" class="block text-sm font-medium text-gray-700 mb-1 text-left">Level:</label>
+                    <select id="${levelId}" data-stat-name="level" 
+                            class="char-data-dropdown w-full p-2 border border-indigo-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-white">
+                        ${levelOptionsHtml}
+                    </select>
+                </div>
+            `;
+            // Attach listener directly to save all character data
+            document.getElementById(levelId).addEventListener('change', saveCharacterData);
+
+            // 3. Generate Hall Dropdown 
+            const hallId = 'hall-input-select';
+            const hallOptionsHtml = HALL_OPTIONS.map(val => 
+                `<option value="${val}">${val}</option>`
+            ).join('');
+
+            hallSelectionContainer.innerHTML = `
+                <div>
+                    <label for="${hallId}" class="block text-sm font-medium text-gray-700 mb-1 text-left">Hall Affiliation:</label>
+                    <select id="${hallId}" data-stat-name="hall" 
+                            class="char-data-dropdown w-full p-2 border border-indigo-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-white">
+                        ${hallOptionsHtml}
+                    </select>
+                </div>
+            `;
+            document.getElementById(hallId).addEventListener('change', saveCharacterData);
+
+            // 4. Generate FP Dropdown
+            const fpId = 'stat-input-fp';
+            const fpOptionsHtml = FP_RANGE.map(val => 
+                `<option value="${val}">${val}</option>`
+            ).join('');
+
+            fpSelectionContainer.innerHTML = `
+                <div>
+                    <label for="${fpId}" class="block text-sm font-medium text-gray-700 mb-1 text-left">FP Points:</label>
+                    <select id="${fpId}" data-stat-name="fp" 
+                            class="stat-input-dropdown w-full p-2 border border-indigo-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-white">
+                        ${fpOptionsHtml}
+                    </select>
+                </div>
+            `;
+            // Note: class 'stat-input-dropdown' is for character stats (element/attribute/fp)
+            document.getElementById(fpId).addEventListener('change', saveCharacterData);
+
+
+            // 5. Generate Attribute/Element Stat Dropdowns
+            [
+                ...ELEMENT_STATS.map(name => ({ name, range: ELEMENT_RANGE })),
+                ...ATTRIBUTE_STATS.map(name => ({ name, range: ATTRIBUTE_RANGE }))
+            ].forEach(({ name, range }) => {
+                const id = `stat-input-${name.toLowerCase()}`;
+                
+                const selectOptions = range.map(val => 
+                    `<option value="${val}">${val}</option>`
+                ).join('');
+                
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label for="${id}" class="block text-xs font-medium text-gray-600 mb-1 text-left">${name}:</label>
+                    <select id="${id}" data-stat-name="${name}" 
+                            class="stat-input-dropdown w-full p-2 border border-indigo-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 bg-white">
+                        ${selectOptions}
+                    </select>
+                `;
+                statsDropdownContainer.appendChild(div);
+
+                // Attach listener directly
+                div.querySelector(`#${id}`).addEventListener('change', saveCharacterData);
+            });
+            
+            // Also ensure the name input listener is active
+            charNameInput.addEventListener('input', saveCharacterData);
+        }
+        
+        // --- Stat Helper Function ---
+        function getInitialStats() {
+            const initialStats = {
+                level: 1, 
+                hall: HALL_OPTIONS[0],
+                fp: 10 
+            };
+            ELEMENT_STATS.forEach(stat => {
+                initialStats[stat] = 0;
+            });
+            ATTRIBUTE_STATS.forEach(stat => {
+                initialStats[stat] = 8;
+            });
+            return initialStats;
+        }
+
+
+        // --- Firestore Data Operations ---
+        
+        // IMPORTANT: These functions correctly use the userId path for isolation and persistence.
+
+        function getCharacterDocRef() {
+            if (!db || !userId) return null;
+            // Path: artifacts/{appId}/users/{userId}/character_data/profile
+            return doc(db, `artifacts/${appId}/users/${userId}/${CHARACTER_COLLECTION}`, CHARACTER_DOC_ID);
+        }
+
+        function getLearnedSpellsCollectionRef() {
+            if (!db || !userId) return null;
+            // Path: artifacts/{appId}/users/{userId}/learned_spells
+            return collection(db, `artifacts/${appId}/users/${userId}/${LEARNED_SPELLS_COLLECTION}`);
+        }
+        
+        function getItemCollectionRef() {
+            if (!db || !userId) return null;
+            // Path: artifacts/{appId}/users/{userId}/item_list
+            return collection(db, `artifacts/${appId}/users/${userId}/${ITEM_COLLECTION}`);
+        }
+
+        /**
+         * Saves the character data (name, hall, level, and stats) to Firestore.
+         */
+        const saveCharacterData = debounce(async () => {
+            const docRef = getCharacterDocRef();
+            if (!docRef) return;
+            
+            const name = charNameInput.value.trim();
+            const stats = {};
+            
+            // Gather values from all stats dropdowns (element/attribute/fp)
+            document.querySelectorAll('.stat-input-dropdown').forEach(select => {
+                const statName = select.getAttribute('data-stat-name');
+                stats[statName] = parseInt(select.value, 10);
+            });
+            
+            // Get Hall value
+            const hallSelect = document.getElementById('hall-input-select');
+            const hall = hallSelect ? hallSelect.value : HALL_OPTIONS[0];
+
+            // Get Level value
+            const levelSelect = document.getElementById('level-input-select');
+            const level = levelSelect ? parseInt(levelSelect.value, 10) : 1;
+
+
+            statsSaveStatus.textContent = "Saving...";
+            
+            try {
+                await setDoc(docRef, { 
+                    name: name, 
+                    hall: hall,
+                    level: level, 
+                    stats: stats 
+                }, { merge: true });
+
+                // Update global state immediately
+                const defaultStats = getInitialStats();
+                currentCharacterStats = { ...defaultStats, ...stats, hall: hall, level: level }; 
+
+                if (currentTab === 'my-spells') {
+                    renderMySpells(); 
+                }
+
+                statsSaveStatus.textContent = "Saved automatically.";
+                statsSaveStatus.classList.remove('text-red-500');
+                statsSaveStatus.classList.add('text-green-700');
+
+            } catch (e) {
+                console.error("Error saving character data:", e);
+                statsSaveStatus.textContent = "Save Error.";
+                statsSaveStatus.classList.remove('text-green-700');
+                statsSaveStatus.classList.add('text-red-500');
+            }
+        }, 800);
+
+        /**
+         * Listens to character data changes in real-time from Firestore.
+         */
+        function setupCharacterDataListener() {
+            const docRef = getCharacterDocRef();
+            if (!docRef) return;
+
+            onSnapshot(docRef, (docSnap) => {
+                const defaultStats = getInitialStats();
+                let data = docSnap.exists() ? docSnap.data() : {};
+                
+                // Merge fetched stats with defaults to ensure all keys exist
+                const fetchedStats = data.stats || {};
+                const fetchedHall = data.hall || defaultStats.hall;
+                const fetchedLevel = data.level || defaultStats.level; 
+
+                // Update global state 
+                currentCharacterStats = { 
+                    ...defaultStats, 
+                    ...fetchedStats,
+                    hall: fetchedHall,
+                    level: fetchedLevel 
+                };
+                
+                // Update UI inputs with data from Firestore/Defaults
+                if (data.name !== charNameInput.value) {
+                    charNameInput.value = data.name || '';
+                }
+                
+                updateProfileUI(); // Sync Dropdowns and Text Displays
+                
+                // Re-render My Spells if the tab is active or if we just loaded data
+                if (currentTab === 'my-spells' || !allSpells.length) { 
+                    renderMySpells();
+                }
+            }, (error) => {
+                console.error("Error listening to character data:", error);
+            });
+        }
+        
+        // Helper to update specific UI elements from global state
+        function updateProfileUI() {
+             // 1. Update Hall dropdown
+            const hallSelect = document.getElementById('hall-input-select');
+            if (hallSelect && hallSelect.value !== currentCharacterStats.hall) {
+                hallSelect.value = currentCharacterStats.hall;
+            }
+
+            // 2. Update Level dropdown
+            const levelSelect = document.getElementById('level-input-select');
+            if (levelSelect) {
+                const savedValue = currentCharacterStats['level'];
+                if (savedValue !== undefined && parseInt(levelSelect.value, 10) !== savedValue) {
+                    levelSelect.value = savedValue.toString();
+                }
+            }
+
+
+            // 3. Update All Stat Dropdowns (Includes FP now)
+            const keysToCheck = [...ALL_STATS, 'fp'];
+
+            keysToCheck.forEach(statName => {
+                const select = document.querySelector(`.stat-input-dropdown[data-stat-name="${statName}"]`);
+                if (select) {
+                    const savedValue = currentCharacterStats[statName];
+                    if (savedValue !== undefined && parseInt(select.value, 10) !== savedValue) {
+                        select.value = savedValue.toString();
+                    }
+                }
+            });
+
+            // 4. Update FP Display in My Spells
+            if (fpDisplayValue) {
+                fpDisplayValue.textContent = currentCharacterStats['fp'] !== undefined ? currentCharacterStats['fp'] : '--';
+            }
+        }
+
+        /**
+         * Adjusts the FP value (Use or Refill).
+         */
+        window.adjustFp = async function(amount) {
+            const currentFp = currentCharacterStats['fp'] || 0;
+            const newFp = currentFp + amount;
+
+            if (newFp < 0) return; // Prevent negative FP
+
+            // We update Firestore directly. The listener will then update the UI.
+            const docRef = getCharacterDocRef();
+            if (!docRef) return;
+            
+            const statsUpdate = {
+                stats: {
+                    fp: newFp
+                }
+            };
+
+            try {
+                // Use setDoc with merge:true to update the nested stats object
+                await setDoc(docRef, statsUpdate, { merge: true });
+            } catch (e) {
+                console.error("Error adjusting FP:", e);
+            }
+        };
+
+        
+        /**
+         * Listens to the user's private list of learned spells.
+         */
+        function setupLearnedSpellsListener() {
+            const collectionRef = getLearnedSpellsCollectionRef();
+            if (!collectionRef) return;
+            
+            onSnapshot(collectionRef, (snapshot) => {
+                const newLearnedSpells = {};
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // isKnown is implied by document existence.
+                    newLearnedSpells[doc.id] = { 
+                        isKnown: true, 
+                        favorite: data.favorite || false 
+                    }; 
+                });
+                
+                userLearnedSpells = newLearnedSpells;
+                console.log(`Updated learned spells: ${Object.keys(userLearnedSpells).length} spells learned.`);
+
+                // Re-render lists to reflect changes
+                if (currentTab === 'spells') {
+                    handleSearchAndFilter();
+                } else if (currentTab === 'my-spells') {
+                    renderMySpells();
+                }
+            }, (error) => {
+                console.error("Error listening to learned spells:", error);
+            });
+        }
+        
+        /**
+         * Toggle the 'isKnown' status (the override/learning state) for a spell.
+         */
+        window.toggleKnown = async function(spellId, isKnown) {
+            const docRef = doc(getLearnedSpellsCollectionRef(), spellId);
+            try {
+                if (isKnown) {
+                    // Create the document. Default favorite to false.
+                    await setDoc(docRef, { timestamp: Date.now(), favorite: false }); 
+                } else {
+                    // Delete the document to mark it as not known.
+                    await deleteDoc(docRef);
+                }
+            } catch (e) {
+                console.error(`Error toggling known status for ${spellId}:`, e);
+            }
+        };
+
+
+        window.toggleFavorite = async function(spellId, isFavorited) {
+            const docRef = doc(getLearnedSpellsCollectionRef(), spellId);
+            const isSpellKnown = userLearnedSpells[spellId]?.isKnown;
+
+            if (!isSpellKnown && isFavorited) {
+                // If the spell is not known but the user tries to favorite it, 
+                // we treat this as a signal to make it known first.
+                await window.toggleKnown(spellId, true);
+                // Then, the listener will update the state, and we proceed to set favorite.
+            }
+            
+            try {
+                await setDoc(docRef, { favorite: isFavorited }, { merge: true }); 
+            } catch (e) {
+                console.error(`Error toggling favorite status for ${spellId}:`, e);
+            }
+        };
+        
+        /**
+         * Checks individual requirement string (e.g., 'Int 13', 'Fire 1', 'Arcanium', 'Any 2').
+         */
+        function checkSingleRequirement(req, characterStats) {
+            const normalizedReq = req.trim();
+
+            // 1. Check Hall Requirement
+            if (HALL_OPTIONS.includes(normalizedReq)) {
+                return characterStats.hall === normalizedReq;
+            }
+
+            // 2. Check Stat Requirement
+            const match = normalizedReq.match(/^([A-Za-z]+)\s*(\d*)$/); 
+            if (!match) return false; 
+
+            const requiredStatAbbr = match[1].toLowerCase();
+            const requiredValue = parseInt(match[2], 10) || 0; 
+
+            if (requiredStatAbbr === 'any') {
+                // 'Any X' means any elemental stat (Fire, Water, Earth, Air, Spirit) is X or higher
+                const requiredElementalLevel = requiredValue;
+                let meetsAnyElementalRequirement = false;
+                for (const stat of ELEMENT_STATS) { 
+                    if ((characterStats[stat] || 0) >= requiredElementalLevel) { 
+                        meetsAnyElementalRequirement = true;
+                        break;
+                    }
+                }
+                return meetsAnyElementalRequirement;
+
+            } else {
+                // Check specific attribute or elemental stat
+                const statKey = STAT_MAPPING[requiredStatAbbr];
+                if (statKey) {
+                    const charValue = characterStats[statKey] || 0; 
+                    return charValue >= requiredValue;
+                } else {
+                    return false; 
+                }
+            }
+        }
+        
+        /**
+         * Checks if the character meets all stat/hall requirements based on the spell's requirement string.
+         */
+        function checkStatHallRequirements(requirementString, characterStats) {
+            if (requirementString.toLowerCase() === 'none' || requirementString === '') return true;
+
+            const orBlocks = requirementString.split(/\s+OR\s+/i);
+            let meetsAnyOrBlock = false;
+
+            for (const orBlock of orBlocks) {
+                // Requirements are separated by comma or slash (AND logic)
+                const andRequirements = orBlock.split(/,|\//).map(r => r.trim()).filter(r => r.length > 0);
+                let meetsAllAndRequirements = true;
+
+                for (const req of andRequirements) {
+                    if (!checkSingleRequirement(req, characterStats)) {
+                        meetsAllAndRequirements = false;
+                        break; 
+                    }
+                }
+                
+                if (meetsAllAndRequirements) {
+                    meetsAnyOrBlock = true;
+                    break; 
+                }
+            } 
+            return meetsAnyOrBlock;
+        }
+
+
+        /**
+         * Determines if a spell should appear in the "My Spells" list.
+         */
+        function checkRequirements(spell, characterStats) {
+            const isExplicitlyKnown = userLearnedSpells[spell.id]?.isKnown || false;
+            
+            // RULE 1: OVERRIDE - If the user has checked the 'Add to My Spells' box, it's included.
+            if (isExplicitlyKnown) return true; 
+            
+            // RULE 2: RARITY - If not explicitly known, Uncommon/Rare/Legendary spells cannot be added automatically.
+            const rarity = (spell.rarity || RARITY_COMMON).trim();
+            if (rarity === RARITY_UNCOMMON || rarity === RARITY_RARE || rarity === RARITY_LEGENDARY) {
+                return false; 
+            }
+
+            // RULE 3: COMMON SPELLS - If it's a Common spell, check if character stats meet requirements.
+            const requirementString = (spell.requirement || '').trim();
+            return checkStatHallRequirements(requirementString, characterStats);
+        }
+
+        function renderMySpells() {
+            if (!allSpells.length) {
+                mySpellListStatusElement.textContent = "Spell data is still loading...";
+                mySpellListElement.innerHTML = '';
+                return;
+            }
+
+            let qualifiedSpells = allSpells.filter(spell => 
+                checkRequirements(spell, currentCharacterStats)
+            );
+            
+            // Sort: Favorites first, then alphabetical
+            qualifiedSpells.sort((a, b) => {
+                const aFav = userLearnedSpells[a.id]?.favorite || false;
+                const bFav = userLearnedSpells[b.id]?.favorite || false;
+
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+
+                return (a.spellname || '').localeCompare(b.spellname || '');
+            });
+
+            mySpellListStatusElement.textContent = `Displaying ${qualifiedSpells.length} available spells.`;
+            renderSpellList(qualifiedSpells, mySpellListElement);
+        }
+
+
+        // --- Spell List Logic (Google Sheets CSV Fetch and Parsing) ---
+
+        async function fetchSpells() {
+            spellListStatusElement.textContent = 'Fetching data...';
+            
+            // Mock data used if fetching the real sheet fails
+            const mockSpells = [
+                { id: 'fireball', spellname: 'Fireball', level: '3', range: '150 ft', casttime: '1 Action', fpcost: '1', duration: 'Instant', description: 'An explosion of fire, dealing 8d6 damage.', escalation: '1d6 per FP', rarity: RARITY_RARE, requirement: 'Int 13, Fire 1' },
+                { id: 'cure_wounds', spellname: 'Cure Wounds', level: '1', range: 'Touch', casttime: '1 Action', fpcost: '1', duration: 'Instant', description: 'A creature you touch regains 1d8 + modifier HP.', escalation: '1d8 per FP', rarity: RARITY_COMMON, requirement: 'Wis 13 OR Spirit 1' },
+                { id: 'invisibility', spellname: 'Invisibility', level: '2', range: 'Self', casttime: '1 Action', fpcost: '2', duration: '1 Minute', description: 'Target creature is invisible.', escalation: 'Duration +1 min/FP', rarity: RARITY_UNCOMMON, requirement: 'Dex 10 / Air 1' },
+                { id: 'mage_hand', spellname: 'Mage Hand', level: '0', range: '30 ft', casttime: '1 Action', fpcost: '0', duration: '1 Minute', description: 'Creates a spectral hand that can manipulate objects.', escalation: 'Duration +1 min/FP', rarity: RARITY_COMMON, requirement: 'None' },
+                { id: 'higher_arcana', spellname: 'Higher Arcana', level: '5', range: 'Varies', casttime: '1 Action', fpcost: '3', duration: 'Varies', description: 'Allows casting of spells from other elements.', escalation: 'None', rarity: RARITY_LEGENDARY, requirement: 'Any 3, Wis 15' },
+                { id: 'earth_wall', spellname: 'Earth Wall', level: '4', range: '100 ft', casttime: '1 Action', fpcost: '2', duration: 'Concentration, 10 min', description: 'A wall of stone erupts from the ground.', escalation: '+1d6 damage on hit', rarity: RARITY_RARE, requirement: 'Earth 3, Str 15 OR Con 15' },
+                { id: 'animal_bond', spellname: 'Animal Bond', level: '1', range: '60 ft', casttime: '1 Action', fpcost: '1', duration: '1 Hour', description: 'Gain advantage on checks to influence beasts.', escalation: 'None', rarity: RARITY_COMMON, requirement: 'Animalians OR Water 2' },
+                { id: 'potion_mastery', spellname: 'Potion Mastery', level: '1', range: 'Self', casttime: '1 Action', fpcost: '0', duration: 'Passive', description: 'Increase effectiveness of healing potions.', escalation: 'None', rarity: RARITY_COMMON, requirement: 'Alchemists' },
+            ];
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                const spells = parseCSV(csvText);
+
+                if (spells.length > 0) {
+                    allSpells = spells.map(s => ({ ...s, id: s.spellname.toLowerCase().replace(/\s+/g, '_') })); 
+                    populateFilters(allSpells);
+                    handleSearchAndFilter(); 
+                    spellListStatusElement.textContent = `Successfully loaded ${allSpells.length} spells from URL.`;
+                } else {
+                    allSpells = mockSpells;
+                    populateFilters(mockSpells);
+                    handleSearchAndFilter();
+                    spellListStatusElement.textContent = 'Loaded sheet, but found no valid spell data. Displaying mock data. Check your sheet format.';
+                }
+
+            } catch (error) {
+                console.warn("Fetch failed, using mock data:", error);
+                allSpells = mockSpells;
+                populateFilters(mockSpells);
+                handleSearchAndFilter();
+                spellListStatusElement.textContent = `Fetch failed. Displaying ${mockSpells.length} mock spells. Please ensure your Google Sheet is published as CSV and accessible.`;
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            if (lines.length < 2) return [];
+
+            const rawHeaders = lines[0].trim();
+            const headerRegex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+            const headers = rawHeaders.split(headerRegex).map(h => h.trim().replace(/^"|"$/g, ''));
+            
+            const normalizedKeys = headers.map(h => h.toLowerCase().replace(/\s+/g, ''));
+            
+            const spells = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; 
+
+                const data = line.split(headerRegex).map(d => d.trim().replace(/^"|"$/g, ''));
+                
+                if (data.length === headers.length) {
+                    const spell = {};
+                    headers.forEach((header, index) => {
+                        const key = normalizedKeys[index];
+                        spell[key] = data[index].trim(); 
+                    });
+                    spells.push(spell);
+                }
+            }
+            return spells;
+        }
+
+        function populateFilters(spells) {
+            const rarities = [...new Set(spells.map(s => s.rarity ? s.rarity.trim() : '').filter(r => r !== ''))].sort();
+            rarityFilterSelect.innerHTML = '<option value="">Filter By Rarity (All)</option>';
+            rarities.forEach(rarity => {
+                const option = document.createElement('option');
+                option.value = rarity;
+                option.textContent = rarity;
+                rarityFilterSelect.appendChild(option);
+            });
+            
+            searchInput.addEventListener('input', handleSearchAndFilter);
+            rarityFilterSelect.addEventListener('change', handleSearchAndFilter);
+        }
+
+        function handleSearchAndFilter() {
+            let filteredSpells = [...allSpells];
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const rarityFilter = rarityFilterSelect.value.toLowerCase();
+            
+            if (rarityFilter) {
+                filteredSpells = filteredSpells.filter(spell => 
+                    spell.rarity && spell.rarity.trim().toLowerCase() === rarityFilter
+                );
+            }
+
+            if (searchTerm) {
+                filteredSpells = filteredSpells.filter(spell => {
+                    const name = (spell.spellname || '').toLowerCase();
+                    const description = (spell.description || '').toLowerCase();
+                    const requirement = (spell.requirement || '').toLowerCase();
+                    return name.includes(searchTerm) || 
+                           description.includes(searchTerm) || 
+                           requirement.includes(searchTerm);
+                });
+            }
+
+            renderSpellList(filteredSpells, spellListElement);
+            spellListStatusElement.textContent = `Displaying ${filteredSpells.length} of ${allSpells.length} spells.`;
+        }
+
+        function renderSpellList(spells, targetElement) {
+            if (spells.length === 0) {
+                targetElement.innerHTML = '<p class="text-center text-gray-500 p-8 border border-dashed rounded-lg">No spells matched your criteria.</p>';
+                return;
+            }
+            
+            const isMySpellsTab = targetElement.id === 'my-spell-list'; 
+
+            targetElement.innerHTML = spells.map(spell => {
+                const currentKnownState = userLearnedSpells[spell.id] || { isKnown: false, favorite: false };
+                const isKnown = currentKnownState.isKnown;
+                const isFavorited = currentKnownState.favorite;
+                const rarity = (spell.rarity || RARITY_COMMON).trim();
+                const isAllSpellsTab = targetElement.id === 'spell-list'; 
+
+                let knownCheckboxHtml = '';
+                let favoriteCheckboxHtml = '';
+                
+                // Show the "Add to My Spells" checkbox ONLY on the All Spells tab
+                if (isAllSpellsTab) {
+                    knownCheckboxHtml = `
+                        <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                            <label for="known-${spell.id}" class="text-sm font-medium text-gray-700 flex items-center cursor-pointer">
+                                <input
+                                    id="known-${spell.id}"
+                                    type="checkbox"
+                                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mr-2"
+                                    ${isKnown ? 'checked' : ''}
+                                    onchange="window.toggleKnown('${spell.id}', this.checked)"
+                                />
+                                Add to My Spells (Override Requirements)
+                            </label>
+                            ${isKnown ? '<span class="text-xs text-green-600 font-semibold">In Your List</span>' : '<span class="text-xs text-gray-500 font-semibold">Not Selected</span>'}
+                        </div>
+                    `;
+                }
+                
+                // Show the Favorite checkbox ONLY on the My Spells tab
+                if (isMySpellsTab) { 
+                     favoriteCheckboxHtml = `
+                        <div class="mt-4 pt-3 border-t border-gray-200 flex items-center justify-between">
+                            <label for="favorite-${spell.id}" class="text-sm font-medium text-gray-700 flex items-center cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" 
+                                    fill="${isFavorited ? '#f59e0b' : 'none'}" 
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" 
+                                    class="w-5 h-5 mr-2 transition-colors ${isFavorited ? 'text-yellow-500' : 'text-gray-400'}">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.08 6.556l1.986 4.026a.7.7 0 00.528.384l4.444.646a.7.7 0 01.389 1.192l-3.217 3.14a.7.7 0 00-.203.626l.76 4.428a.7.7 0 01-1.015.736L12 18.25l-3.968 2.086a.7.7 0 01-1.015-.736l.76-4.428a.7.7 0 00-.203-.626l-3.217-3.14a.7.7 0 01.389-1.192l4.444-.646a.7.7 0 00.528-.384l1.986-4.026z" />
+                                </svg>
+                                Favorite Spell
+                            </label>
+                            <input
+                                id="favorite-${spell.id}"
+                                type="checkbox"
+                                class="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                                ${isFavorited ? 'checked' : ''}
+                                onchange="window.toggleFavorite('${spell.id}', this.checked)"
+                            />
+                        </div>
+                    `;
+                }
+                
+                // Display status information on the My Spells tab
+                let mySpellsStatus = '';
+                if (!isAllSpellsTab) {
+                    // Check if it's naturally included (not known, but meets requirements/is common)
+                    const meetsNaturalReqs = checkStatHallRequirements(spell.requirement || '', currentCharacterStats);
+
+                    if (isKnown) {
+                        mySpellsStatus = '<p class="text-xs text-indigo-600 italic mt-2 font-semibold">Status: Manually added (Override).</p>';
+                    } else if (meetsNaturalReqs && (rarity === RARITY_COMMON || rarity === RARITY_LEGENDARY)) {
+                         mySpellsStatus = '<p class="text-xs text-green-600 italic mt-2 font-semibold">Status: Requirements Met.</p>';
+                    } else {
+                        // This case shouldn't strictly happen if checkRequirements is the filter, but helpful for debugging
+                        mySpellsStatus = '<p class="text-xs text-red-600 italic mt-2 font-semibold">Status: Missing Requirements.</p>';
+                    }
+                }
+                
+                return `
+                    <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition duration-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xl font-bold text-indigo-900">${spell.spellname || 'Unnamed Spell'}</h3>
+                            <span class="text-xs font-semibold bg-gray-300 text-gray-800 px-3 py-1 rounded-full whitespace-nowrap">
+                                Rarity: ${rarity || 'N/A'}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">
+                            <strong class="font-semibold">Requirement:</strong> ${spell.requirement || 'None'}
+                        </p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-gray-600 bg-gray-100 p-3 rounded-lg mb-3">
+                            <p><strong class="text-gray-800">Level:</strong> ${spell.level || '0'}</p>
+                            <p><strong class="text-gray-800">Cast Time:</strong> ${spell.casttime || 'N/A'}</p>
+                            <p><strong class="text-gray-800">FP Cost:</strong> ${spell.fpcost || 'N/A'}</p>
+                            <p><strong class="text-gray-800">Duration:</strong> ${spell.duration || 'Instant'}</p>
+                        </div>
+                        <p class="text-sm text-gray-800 mb-3">${spell.description || 'No description provided.'}</p>
+                        ${spell.escalation ? `<p class="text-xs text-gray-800 bg-gray-100 p-2 rounded">
+                            <strong class="font-semibold">Escalation:</strong> ${spell.escalation}
+                        </p>` : ''}
+                        ${knownCheckboxHtml}
+                        ${favoriteCheckboxHtml}
+                        ${mySpellsStatus}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // --- Item List Functions ---
+        
+        /**
+         * Decrements item amount by 1 or deletes the stack if amount is 1. (Tap/Click action)
+         */
+        window.deleteItem = async function(itemId) {
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const docRef = doc(getItemCollectionRef(), itemId);
+
+            try {
+                if (item.amount > 1) {
+                    // Decrement amount
+                    await setDoc(docRef, { amount: item.amount - 1 }, { merge: true });
+                    console.log(`Item ${item.name} decremented to ${item.amount - 1}`);
+                } else {
+                    // Amount is 1, so delete the stack
+                    await deleteDoc(docRef);
+                    console.log(`Item stack ${item.name} deleted.`);
+                }
+            } catch (e) {
+                console.error(`Error processing item action for ${item.name}:`, e);
+            }
+        };
+
+        /**
+         * Deletes the entire item stack regardless of amount. (Long Press action)
+         */
+        window.deleteStack = async function(itemId) {
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const docRef = doc(getItemCollectionRef(), itemId);
+            
+            console.warn(`[LONG PRESS ACTION] Deleting entire stack of ${item.name}.`);
+
+            try {
+                await deleteDoc(docRef);
+            } catch (e) {
+                console.error(`Error deleting entire stack for ${item.name}:`, e);
+            }
+        };
+        
+        
+        /**
+         * Opens the modal for adding a new item and resets the form.
+         */
+        window.openAddItemModal = function() {
+            itemNameInput.value = '';
+            itemAmountInput.value = '1';
+            itemDescriptionInput.value = '';
+            addItemModal.classList.remove('hidden');
+        };
+
+        /**
+         * Closes the item modal.
+         */
+        window.closeAddItemModal = function() {
+            addItemModal.classList.add('hidden');
+        };
+
+        /**
+         * Saves a new item to the Firestore item list collection.
+         */
+        window.saveItem = async function() {
+            const name = itemNameInput.value.trim();
+            const amount = parseInt(itemAmountInput.value, 10);
+            const description = itemDescriptionInput.value.trim();
+
+            if (!name) {
+                console.error("Item name cannot be empty.");
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                 console.error("Amount must be a positive number.");
+                return;
+            }
+
+            const collectionRef = getItemCollectionRef();
+            if (!collectionRef) return;
+
+            try {
+                await addDoc(collectionRef, {
+                    name: name,
+                    amount: amount,
+                    description: description,
+                    timestamp: Date.now() // For sorting purposes
+                });
+                
+                window.closeAddItemModal();
+                console.log("Item saved successfully.");
+
+            } catch (e) {
+                console.error("Error adding item:", e);
+            }
+        };
+
+
+        /**
+         * Listens to the user's private item list in real-time.
+         */
+        function setupItemListListener() {
+            const collectionRef = getItemCollectionRef();
+            if (!collectionRef) return;
+            
+            // Note: We are not using orderBy() here to avoid index requirements, we sort in JS instead.
+            onSnapshot(collectionRef, (snapshot) => {
+                allItems = [];
+                snapshot.forEach(doc => {
+                    allItems.push({ id: doc.id, ...doc.data() }); 
+                });
+                
+                // Sort items alphabetically by name
+                allItems.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                
+                console.log(`Updated inventory: ${allItems.length} items.`);
+
+                if (currentTab === 'items') {
+                    renderItems();
+                }
+            }, (error) => {
+                console.error("Error listening to item list:", error);
+            });
+        }
+        
+        /**
+         * Renders the current list of items in the Item List view, setting up long-press detection.
+         */
+        function renderItems() {
+            if (!allItems.length) {
+                itemListStatusElement.textContent = "Your inventory is currently empty. Add an item above!";
+                itemListElement.innerHTML = '';
+                return;
+            }
+
+            itemListStatusElement.textContent = `Displaying ${allItems.length} item stacks.`;
+            
+            // 1. Generate HTML string with placeholders for item ID
+            itemListElement.innerHTML = allItems.map(item => `
+                <div class="item-row p-4 bg-white rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
+                    <!-- Item Info -->
+                    <div class="flex-grow min-w-0 pr-4">
+                        <div class="flex items-baseline mb-1">
+                            <h3 class="text-xl font-bold text-gray-900 truncate mr-2">${item.name || 'Unknown Item'}</h3>
+                            <span class="text-lg font-extrabold text-indigo-600 whitespace-nowrap">
+                                x${item.amount || 1}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 break-words">${item.description || 'No description provided.'}</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex-shrink-0 flex space-x-2">
+                        <!-- Delete Button: Tap to decrement/use, Hold to delete stack. -->
+                        <button data-item-id="${item.id}"
+                            class="delete-item-btn text-gray-400 hover:text-red-600 transition duration-150 p-1 rounded-full bg-gray-50 hover:bg-red-100 relative group"
+                            title="Tap to use one, Hold to delete stack">
+                             <!-- Minus icon for decrement -->
+                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                             <span class="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white text-[10px] px-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                HOLD TO DELETE
+                             </span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // 2. Attach Event Listeners for Long Press after rendering
+            document.querySelectorAll('.delete-item-btn').forEach(button => {
+                const itemId = button.getAttribute('data-item-id');
+                let isLongPress = false;
+
+                const startPress = (e) => {
+                    // Prevent default behavior (e.g., context menu on long touch)
+                    if (e.type === 'touchstart') e.preventDefault(); 
+                    
+                    isLongPress = false;
+                    clearTimeout(pressTimer);
+                    
+                    // Start the long press timer
+                    pressTimer = setTimeout(() => {
+                        window.deleteStack(itemId);
+                        isLongPress = true;
+                        // Reset timer to prevent click event
+                        pressTimer = null; 
+                    }, LONG_PRESS_THRESHOLD);
+                };
+
+                const endPress = (e) => {
+                    // If the timer is still running (i.e., it wasn't a long press)
+                    if (pressTimer !== null) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                    
+                    // If it was not a long press (timer finished) and not a mouseout/cancel event
+                    if (!isLongPress && e.type !== 'mouseout' && e.type !== 'touchcancel' && e.type !== 'pointercancel') {
+                         window.deleteItem(itemId);
+                    }
+                };
+
+                // Mouse events
+                button.addEventListener('mousedown', startPress);
+                button.addEventListener('mouseup', endPress);
+                button.addEventListener('mouseleave', endPress); // Use mouseleave to cancel if cursor moves away
+
+                // Touch events (for mobile)
+                button.addEventListener('touchstart', startPress);
+                button.addEventListener('touchend', endPress);
+                button.addEventListener('touchcancel', endPress);
+            });
+        }
+
+
+        // --- Initialization ---
+
+        // PWA Manifest Data (used for dynamic injection in the Canvas environment)
+        const manifestData = {
+            "name": "HHRPG Spells Catalog",
+            "short_name": "HHRPG Spells",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#4f46e5",
+            "description": "Spell catalog for HHRPG, including character profile management.",
+            "icons": [
+                { "src": "https://placehold.co/192x192/4f46e5/ffffff?text=H", "sizes": "192x192", "type": "image/png" },
+                { "src": "https://placehold.co/512x512/4f46e5/ffffff?text=H", "sizes": "512x512", "type": "image/png" },
+                { "src": "https://placehold.co/512x512/4f46e5/ffffff?text=H", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+            ]
+        };
+
+        function registerPwa() {
+            try {
+                // In a real environment, these files would be served statically. 
+                // For this environment, we dynamically inject the manifest link.
+                const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+                const manifestURL = URL.createObjectURL(manifestBlob);
+                const link = document.createElement('link');
+                link.rel = 'manifest';
+                link.href = manifestURL;
+                document.head.appendChild(link);
+                
+                // --- REMOVED SERVICE WORKER REGISTRATION HERE TO FIX THE ERROR ---
+                
+                /*
+                // PWA Registration Script (Causes errors in some sandboxed environments)
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', () => {
+                        // The path to service-worker.js will be relative to the root URL
+                        navigator.serviceWorker.register('/service-worker.js')
+                            .then(registration => {
+                                console.log('Service Worker registered successfully:', registration.scope);
+                            })
+                            .catch(error => {
+                                console.error('Service Worker registration failed. Remember to serve it from the root directory over HTTPS.', error);
+                            });
+                    });
+                } else {
+                    console.log("Service Workers not supported in this browser.");
+                }
+                */
+               
+            } catch (e) {
+                console.error('PWA: Failed to inject manifest link or register Service Worker:', e);
+            }
+        }
+        
+        async function initializeAppAndAuth() {
+            registerPwa(); // Register PWA components
+
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing. Data persistence will not work.");
+                loadingElement.classList.add('hidden');
+                contentElement.classList.remove('hidden');
+                fetchSpells(); 
+                generateStatDropdowns();
+                window.switchTab(currentTab);
+                return;
+            }
+
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Use existing token if available, otherwise sign in anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Wait for authentication state to be confirmed before loading user data
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdElement.textContent = userId;
+                        console.log("User authenticated with persistent ID:", userId);
+                        
+                        // Setup all listeners that fetch user-specific data
+                        generateStatDropdowns();
+                        setupCharacterDataListener();
+                        setupLearnedSpellsListener();
+                        setupItemListListener(); 
+                        fetchSpells();
+                        
+                        loadingElement.classList.add('hidden');
+                        contentElement.classList.remove('hidden');
+                        
+                        window.switchTab(currentTab);
+                    } else {
+                        // This fallback shouldn't happen if auth is successful, but handles edge cases.
+                        userId = crypto.randomUUID(); 
+                        userIdElement.textContent = `Anonymous (${userId.substring(0, 8)}...)`;
+                        console.error("User failed to authenticate or logged out. Using a temporary anonymous ID. Persistence may be limited.");
+                        
+                        generateStatDropdowns();
+                        fetchSpells();
+                        loadingElement.classList.add('hidden');
+                        contentElement.classList.remove('hidden');
+                        window.switchTab(currentTab);
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase initialization or authentication failed:", error);
+                loadingElement.innerHTML = `<p class="text-red-600">Error initializing the app. Check console for details.</p>`;
+            }
+        }
+
+
+        initializeAppAndAuth();
+
+    </script>
+
+</body>
+</html>
