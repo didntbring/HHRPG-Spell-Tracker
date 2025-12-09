@@ -4,66 +4,93 @@ body {
     color: #333;
     margin: 0;
     padding: 0;
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
 header {
-    background-color: #5d4037; /* A nice earthy color */
+    background-color: #5d4037;
     color: white;
     padding: 20px 0;
     text-align: center;
 }
 
 main {
-    max-width: 900px;
+    max-width: 1000px; /* Make the main container slightly wider */
     margin: 20px auto;
     padding: 0 20px;
 }
 
+/* --- Search and Controls Styling --- */
+.controls {
+    background-color: #e0e0e0;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#search-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+/* --- Spell List and Card Styling (Smaller, Rounded) --- */
 #spell-list {
     display: grid;
-    gap: 20px;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px; /* Reduced gap */
+    /* Ensure a minimum of 280px width per card */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
 }
 
 .spell-card {
     background: white;
     border: 1px solid #ccc;
     padding: 15px;
-    border-radius: 6px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+    border-radius: 12px; /* Rounded edges */
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    height: 100%; /* Ensure all cards are same height in the grid row */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .spell-card h3 {
     margin: 0 0 10px 0;
-    color: #8d6e63; /* Accent color for the title */
-    border-bottom: 2px solid #eee;
+    color: #8d6e63;
+    border-bottom: 1px solid #eee; /* Thinner line */
     padding-bottom: 5px;
+    font-size: 1.1em; /* Slightly smaller title */
 }
 
 .spell-detail {
     margin-bottom: 5px;
-    font-size: 0.95em;
+    font-size: 0.85em; /* Smaller font for detail lines */
 }
 
-.spell-detail strong {
-    font-weight: bold;
-    color: #333;
-    margin-right: 5px;
-}
-
+/* --- Description and Escalation Cleanup --- */
 .description-block {
     margin-top: 10px;
     border-left: 3px solid #bcaaa4;
     padding-left: 10px;
     background-color: #fafafa;
-    padding: 10px;
+    padding: 8px; /* Reduced padding */
     border-radius: 3px;
-    white-space: pre-wrap; /* Keeps line breaks from the CSV if present */
+    font-size: 0.9em; /* Smaller font for the block */
+    overflow: hidden; /* Prevent text overflow */
 }
 
 .description-block strong {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     color: #5d4037;
+    font-size: 0.9em;
+}
+
+.description-block p {
+    margin: 0 0 5px 0;
 }
