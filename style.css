@@ -39,11 +39,15 @@ main {
     font-size: 1em;
 }
 
-/* --- Spell List and Card Styling (Smaller, Rounded) --- */
-#spell-list {
+/* * --- Spell List and Card Styling (FIXED GRID LAYOUT) --- 
+ * This targets BOTH the All Spells container (#spell-list) 
+ * and the My Spells container (#spell-list-my)
+ */
+#spell-list, 
+#spell-list-my {
     display: grid;
-    gap: 15px; /* Reduced gap */
-    /* Ensure a minimum of 280px width per card */
+    gap: 15px; 
+    /* Enforces 300px minimum width, resulting in 3 columns on desktop */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
 }
 
@@ -62,14 +66,15 @@ main {
 .spell-card h3 {
     margin: 0 0 10px 0;
     color: #8d6e63;
-    border-bottom: 1px solid #eee; /* Thinner line */
+    /* This style is now overridden by .card-header border-bottom */
+    border-bottom: 1px solid #eee; 
     padding-bottom: 5px;
-    font-size: 1.1em; /* Slightly smaller title */
+    font-size: 1.1em; 
 }
 
 .spell-detail {
     margin-bottom: 5px;
-    font-size: 0.85em; /* Smaller font for detail lines */
+    font-size: 0.85em; 
 }
 
 /* --- Description and Escalation Cleanup --- */
@@ -78,10 +83,10 @@ main {
     border-left: 3px solid #bcaaa4;
     padding-left: 10px;
     background-color: #fafafa;
-    padding: 8px; /* Reduced padding */
+    padding: 8px; 
     border-radius: 3px;
-    font-size: 0.9em; /* Smaller font for the block */
-    overflow: hidden; /* Prevent text overflow */
+    font-size: 0.9em; 
+    overflow: hidden; 
 }
 
 .description-block strong {
@@ -99,7 +104,7 @@ main {
 /* Container for the spell title and checkbox */
 .card-header {
     display: flex;
-    justify-content: space-between; /* Pushes title to the left, checkbox to the right */
+    justify-content: space-between; 
     align-items: center;
     border-bottom: 1px solid #eee;
     padding-bottom: 5px;
@@ -107,7 +112,7 @@ main {
 }
 
 .card-header h3 {
-    margin: 0; /* Remove h3 margin so flexbox can control spacing */
+    margin: 0; 
     flex-shrink: 1;
 }
 
@@ -118,13 +123,12 @@ main {
     gap: 5px;
     font-size: 0.8em;
     font-weight: bold;
-    color: #4CAF50; /* A green color for visibility */
-    white-space: nowrap; /* Keep the label and checkbox together */
+    color: #4CAF50; 
+    white-space: nowrap; 
     flex-shrink: 0;
 }
 
 .override-control input[type="checkbox"] {
-    /* Style the checkbox appearance if needed, otherwise browser default is fine */
     cursor: pointer;
 }
 
@@ -134,12 +138,12 @@ main {
 
 /* Ensure the border in the card-header overrides the previous h3 border-bottom */
 .spell-card h3 {
-    border-bottom: none; 
+    border-bottom: none; /* Corrected: This rule was in the original and is kept */
 }
 /* --- Tab Navigation Styles --- */
 nav {
     padding: 0 20px;
-    background-color: #4e342e; /* Slightly darker header color */
+    background-color: #4e342e;
     display: flex;
     justify-content: center;
 }
@@ -161,7 +165,7 @@ nav {
 }
 
 .tab-button.active {
-    background-color: #f4f4f9; /* Match background for "raised" look */
+    background-color: #f4f4f9;
     color: #333;
     font-weight: bold;
     cursor: default;
