@@ -10,13 +10,14 @@
     <header>
         <h1>🧙 Character Creator & Spell Finder</h1>
         <nav>
-            <button class="tab-button active" data-tab="spells">Spell List</button>
+            <button class="tab-button active" data-tab="all-spells">All Spells</button>
             <button class="tab-button" data-tab="info">Character Info</button>
+            <button class="tab-button" data-tab="my-spells">My Spells</button>
         </nav>
     </header>
 
     <main>
-        <section id="spells" class="tab-content active">
+        <section id="all-spells" class="tab-content active">
             <div class="controls">
                 <label for="search-input">Search Spells by Name:</label>
                 <input type="text" id="search-input" placeholder="Start typing a spell name...">
@@ -24,7 +25,7 @@
             
             <section id="spell-results">
                 <h2>All Spells:</h2>
-                <div id="spell-list">
+                <div id="spell-list-all">
                     <p>Loading spells...</p>
                 </div>
             </section>
@@ -80,8 +81,15 @@
                 <p class="save-status">Character data automatically saved.</p>
             </form>
         </section>
+        
+        <section id="my-spells" class="tab-content">
+            <h2>Your Current Spell List:</h2>
+            <div id="spell-list-my">
+                <p>Add spells to your list by checking "Override Reqs" or filling out your Character Info!</p>
+            </div>
+        </section>
     </main>
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="app.js"></script>
 </body>
