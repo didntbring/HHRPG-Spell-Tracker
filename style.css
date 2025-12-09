@@ -94,3 +94,45 @@ main {
 .description-block p {
     margin: 0 0 5px 0;
 }
+/* --- New Checkbox Styling --- */
+
+/* Container for the spell title and checkbox */
+.card-header {
+    display: flex;
+    justify-content: space-between; /* Pushes title to the left, checkbox to the right */
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.card-header h3 {
+    margin: 0; /* Remove h3 margin so flexbox can control spacing */
+    flex-shrink: 1;
+}
+
+/* Style for the checkbox group */
+.override-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #4CAF50; /* A green color for visibility */
+    white-space: nowrap; /* Keep the label and checkbox together */
+    flex-shrink: 0;
+}
+
+.override-control input[type="checkbox"] {
+    /* Style the checkbox appearance if needed, otherwise browser default is fine */
+    cursor: pointer;
+}
+
+.override-label {
+    cursor: pointer;
+}
+
+/* Ensure the border in the card-header overrides the previous h3 border-bottom */
+.spell-card h3 {
+    border-bottom: none; 
+}
