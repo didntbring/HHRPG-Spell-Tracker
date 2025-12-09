@@ -17,18 +17,20 @@
     </header>
 
     <main>
-        <section id="all-spells" class="tab-content active">
-            <div class="controls">
-                <label for="search-input">Search Spells by Name:</label>
-                <input type="text" id="search-input" placeholder="Start typing a spell name...">
-            </div>
-            
+       <section id="all-spells" class="tab-content active">
             <section id="spell-results">
                 <h2>All Spells:</h2>
-                <div id="spell-list-all">
+                <div id="spell-list-all" class="spell-grid"> 
                     <p>Loading spells...</p>
                 </div>
             </section>
+        </section>
+
+        <section id="my-spells" class="tab-content">
+            <h2>Your Current Spell List:</h2>
+            <div id="spell-list-my" class="spell-grid">
+                <p>Add spells to your list...</p>
+            </div>
         </section>
 
         <section id="info" class="tab-content">
