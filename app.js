@@ -3,7 +3,7 @@ const STORAGE_KEY = 'characterCreatorData';
 let allSpells = []; 
 let mySpells = new Set(); 
 
-// Data for dropdowns
+// Data for dropdowns (UNMODIFIED)
 const HALLS = ["Arcanium", "Assassins", "Animalians", "Coterie", "Alchemists", "Stone Singers", "Oestomancers", "Metallum Nocturn", "Aura Healers", "Protectors"];
 const LEVELS = Array.from({length: 20}, (_, i) => i + 1); // 1-20
 const FPS = Array.from({length: 21}, (_, i) => i + 10); // 10-30
@@ -11,16 +11,14 @@ const ELEMENTS = Array.from({length: 11}, (_, i) => i); // 0-10
 const STATS = Array.from({length: 13}, (_, i) => i + 8); // 8-20
 const CORE_STATS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
-// --- Utility Functions ---
-
+// --- Utility Functions (Local Storage & Populating Selects - UNMODIFIED) ---
+// ... (The populateSelect, saveCharacterData, loadCharacterData functions go here) ...
 function populateSelect(id, values, defaultValue = null) {
     const select = document.getElementById(id);
     if (!select) return; 
 
-    // Clear existing options
     select.innerHTML = '';
     
-    // Add default/placeholder option
     const placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = `-- Select ${id.charAt(0).toUpperCase() + id.slice(1)} --`;
@@ -55,7 +53,6 @@ function saveCharacterData() {
         wis: document.getElementById('wis').value,
         cha: document.getElementById('cha').value,
     };
-    // Local Storage is key to making this persistent and user-specific
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     console.log("Character data saved.");
 }
@@ -65,7 +62,6 @@ function loadCharacterData() {
     if (savedData) {
         const data = JSON.parse(savedData);
         
-        // Restore values
         document.getElementById('char-name').value = data.name || '';
         document.getElementById('level').value = data.level || '';
         document.getElementById('fp').value = data.fp || '';
@@ -86,32 +82,29 @@ function loadCharacterData() {
     }
 }
 
-// --- Tab Switching Logic ---
+
+// --- Tab Switching Logic (Slightly modified to include 'my-spells') ---
 
 function switchTab(tabId) {
-    // Hide all content sections
+    // If switching to the My Spells tab, render the list first
+    if (tabId === 'my-spells') {
+        renderMySpells();
+    }
+    
     document.querySelectorAll('.tab-content').forEach(section => {
         section.classList.remove('active');
     });
 
-    // Deactivate all buttons
     document.querySelectorAll('.tab-button').forEach(button => {
         button.classList.remove('active');
     });
 
-    // Show the selected section
     document.getElementById(tabId).classList.add('active');
-    
-    // Activate the corresponding button
     document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
 }
 
-// --- Papa Parse and Search Logic (Reused) ---
-// (The loadSpells, renderSpells, handleOverrideChange, filterSpellsBySearch functions go here)
-// Due to length, assume these are included from your previous working code.
-// I will only include the initialization block for the final merge.
 
-// --- 1. CSV Loading and Parsing (Papa Parse - Reused) ---
+// --- Papa Parse and Search Logic (Reused) ---
 
 function loadSpells(url) {
     return new Promise((resolve, reject) => {
@@ -125,7 +118,7 @@ function loadSpells(url) {
     });
 }
 
-// --- 2. Event Handler for Checkbox (Reused) ---
+// --- Event Handler for Checkbox (UPDATED to trigger renderMySpells) ---
 
 function handleOverrideChange(event) {
     const checkbox = event.target;
@@ -133,22 +126,25 @@ function handleOverrideChange(event) {
     
     if (checkbox.checked) {
         mySpells.add(spellName);
+        // NEW: Switch to My Spells tab when a spell is overridden
+        switchTab('my-spells'); 
     } else {
         mySpells.delete(spellName);
     }
-    // We will update a "My Spells" display here later
+    
+    // Always update the My Spells list if we're on that tab or not
+    renderMySpells(); 
 }
 
-// --- 3. Display Utility (Updated with Range/Cast Time Fix) ---
 
-function renderSpells(spellsToDisplay) {
-    const listContainer = document.getElementById('spell-list');
+// --- Display Utility (RENAMED and Container ID changed) ---
+
+function renderSpellCards(spellsToDisplay, containerId) {
+    const listContainer = document.getElementById(containerId);
     listContainer.innerHTML = ''; 
-    
-    document.querySelector('#spell-results h2').textContent = `Showing ${spellsToDisplay.length} Spells`;
 
     if (spellsToDisplay.length === 0) {
-        listContainer.innerHTML = '<p>No spells found matching your search term.</p>';
+        listContainer.innerHTML = '<p>No spells to display.</p>';
         return;
     }
 
@@ -156,6 +152,7 @@ function renderSpells(spellsToDisplay) {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
+        // Ensure checkbox state is maintained when rendering the list
         const isChecked = mySpells.has(spell['Spell Name']) ? 'checked' : '';
         
         card.innerHTML = `
@@ -190,6 +187,7 @@ function renderSpells(spellsToDisplay) {
         `;
         listContainer.appendChild(card);
         
+        // Attach the event listener to the newly created checkbox
         const checkbox = card.querySelector(`[data-spell-name="${spell['Spell Name']}"]`);
         if (checkbox) {
             checkbox.addEventListener('change', handleOverrideChange);
@@ -197,13 +195,31 @@ function renderSpells(spellsToDisplay) {
     });
 }
 
-// --- 4. Live Search Logic (Reused) ---
+// Function to render the ALL spells list (wraps the generic renderSpellCards)
+function renderAllSpells(spells = allSpells) {
+    document.querySelector('#all-spells h2').textContent = `All Spells (${spells.length}):`;
+    renderSpellCards(spells, 'spell-list-all');
+}
+
+// Function to render the MY spells list (NEW)
+function renderMySpells() {
+    // 1. Filter the entire spell list to only include spells whose names are in the 'mySpells' Set
+    const mySpellList = allSpells.filter(spell => mySpells.has(spell['Spell Name']));
+    
+    document.querySelector('#my-spells h2').textContent = `Your Spell List (${mySpellList.length} Spells):`;
+    
+    // 2. Render the filtered list to the dedicated container
+    renderSpellCards(mySpellList, 'spell-list-my');
+}
+
+
+// --- Live Search Logic (UPDATED to call renderAllSpells) ---
 
 function filterSpellsBySearch() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     
     if (!searchTerm) {
-        renderSpells(allSpells);
+        renderAllSpells(allSpells); // Pass allSpells to renderAllSpells if no search term
         return;
     }
     
@@ -211,7 +227,7 @@ function filterSpellsBySearch() {
         spell['Spell Name'].toLowerCase().includes(searchTerm)
     );
     
-    renderSpells(filteredSpells);
+    renderAllSpells(filteredSpells);
 }
 
 
@@ -222,7 +238,7 @@ function filterSpellsBySearch() {
         const spellsData = await loadSpells(CSV_FILE_NAME);
         allSpells = spellsData; 
         
-        // 1. Populate Dropdowns on Character Info tab
+        // 1. Populate Dropdowns
         populateSelect('level', LEVELS);
         populateSelect('fp', FPS);
         populateSelect('hall', HALLS);
@@ -245,14 +261,16 @@ function filterSpellsBySearch() {
         });
 
         // 4. Initial spell display and search listener
-        renderSpells(allSpells);
+        renderAllSpells(allSpells); // Initial render of the main list
+        renderMySpells(); // Initial empty render of the my spells list
+        
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
-        console.log("App fully initialized. Data persistence ready.");
+        console.log("App fully initialized. My Spells tab ready.");
 
     } catch (error) {
         console.error("Critical error during loading or display:", error);
-        document.getElementById('spell-list').innerHTML = `
+        document.getElementById('spell-list-all').innerHTML = `
             <p style="color: red;">Error loading data. Check the CSV file name and browser console.</p>
         `;
     }
