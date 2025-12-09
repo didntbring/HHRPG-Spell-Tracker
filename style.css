@@ -1,1 +1,69 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
 
+header {
+    background-color: #5d4037; /* A nice earthy color */
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+main {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+#spell-list {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.spell-card {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.spell-card h3 {
+    margin: 0 0 10px 0;
+    color: #8d6e63; /* Accent color for the title */
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+}
+
+.spell-detail {
+    margin-bottom: 5px;
+    font-size: 0.95em;
+}
+
+.spell-detail strong {
+    font-weight: bold;
+    color: #333;
+    margin-right: 5px;
+}
+
+.description-block {
+    margin-top: 10px;
+    border-left: 3px solid #bcaaa4;
+    padding-left: 10px;
+    background-color: #fafafa;
+    padding: 10px;
+    border-radius: 3px;
+    white-space: pre-wrap; /* Keeps line breaks from the CSV if present */
+}
+
+.description-block strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #5d4037;
+}
