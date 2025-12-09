@@ -1,37 +1,35 @@
 const CSV_FILE_NAME = "HH Data NEW - Sheet1.csv";
-let allSpells = []; // Global storage for all loaded spells
+let allSpells = []; 
 
-// --- 1. CSV Loading and Parsing (Reused) ---
-async function loadSpells(url) {
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to load CSV: ${response.statusText}`);
-    }
-    const text = await response.text();
-    
-    const rows = text.trim().split('\n');
-    const headers = rows[0].split(',').map(h => h.trim());
-    
-    const spells = [];
-    for (let i = 1; i < rows.length; i++) {
-        // Simple comma split. If your data contains commas within quotes, a more robust library like Papa Parse would be needed.
-        const values = rows[i].split(',').map(v => v.trim()); 
-        const spell = {};
-        
-        headers.forEach((header, index) => {
-            spell[header] = values[index] ? values[index].trim() : '';
+// --- 1. CSV Loading and Parsing (UPDATED using Papa Parse) ---
+
+function loadSpells(url) {
+    return new Promise((resolve, reject) => {
+        // Papa.parse handles fetching the file (url), reading it, 
+        // and parsing it into a structured object.
+        Papa.parse(url, {
+            download: true,       // Tell Papa Parse to download the file from the URL
+            header: true,         // Use the first row as object keys (Spell Name, Requirement, etc.)
+            skipEmptyLines: true, // Ignore any blank rows in the CSV
+            
+            complete: function(results) {
+                // Papa Parse stores the clean data in results.data
+                resolve(results.data);
+            },
+            error: function(error) {
+                reject(error);
+            }
         });
-        spells.push(spell);
-    }
-    return spells;
+    });
 }
 
-// --- 2. Display Utility ---
+
+// --- 2. Display Utility (UNCHANGED from previous version) ---
+
 function renderSpells(spellsToDisplay) {
     const listContainer = document.getElementById('spell-list');
-    listContainer.innerHTML = ''; // Clear previous results
+    listContainer.innerHTML = ''; 
     
-    // Update the results header
     document.querySelector('#spell-results h2').textContent = `Showing ${spellsToDisplay.length} Spells`;
 
     if (spellsToDisplay.length === 0) {
@@ -43,7 +41,8 @@ function renderSpells(spellsToDisplay) {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        // Output structure using your column names
+        // Output structure using your column names. 
+        // Note: Papa Parse preserves the original column headers, including spaces.
         card.innerHTML = `
             <h3>${spell['Spell Name']}</h3>
             <div class="spell-detail"><strong>Requirement:</strong> ${spell.Requirement}</div>
@@ -65,31 +64,31 @@ function renderSpells(spellsToDisplay) {
     });
 }
 
-// --- 3. Live Search Logic ---
+// --- 3. Live Search Logic (UNCHANGED from previous version) ---
 
 function filterSpellsBySearch() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     
-    // If the search term is empty, show all spells
     if (!searchTerm) {
         renderSpells(allSpells);
         return;
     }
     
-    // Filter the global list based on the Spell Name
     const filteredSpells = allSpells.filter(spell => 
-        // Convert the spell name to lowercase for case-insensitive search
+        // Check if the spell name includes the search term
         spell['Spell Name'].toLowerCase().includes(searchTerm)
     );
     
     renderSpells(filteredSpells);
 }
 
-// --- 4. Initialization ---
+// --- 4. Initialization (UPDATED for Papa Parse) ---
 
 (async function init() {
+    // Note: loadSpells is now a regular promise-returning function, not async
     try {
-        allSpells = await loadSpells(CSV_FILE_NAME);
+        const spellsData = await loadSpells(CSV_FILE_NAME);
+        allSpells = spellsData; // Store data globally
         
         // Initial display: Show all spells immediately after loading
         renderSpells(allSpells);
@@ -97,12 +96,12 @@ function filterSpellsBySearch() {
         // Attach event listener to the search input for live filtering
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
-        console.log("App initialized. Data loaded successfully.");
+        console.log("App initialized. Papa Parse loaded data successfully.");
 
     } catch (error) {
         console.error("Critical error during loading or display:", error);
         document.getElementById('spell-list').innerHTML = `
-            <p style="color: red;">Error loading data. Check the CSV file name and browser console.</p>
+            <p style="color: red;">Error loading data. Check the CSV file name and browser console. (Papa Parse Error)</p>
         `;
     }
 })();
