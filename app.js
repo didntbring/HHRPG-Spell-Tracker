@@ -1,19 +1,16 @@
 const CSV_FILE_NAME = "HH Data NEW - Sheet1.csv";
 let allSpells = []; 
+let mySpells = new Set(); // NEW: A set to track checked spell names
 
-// --- 1. CSV Loading and Parsing (UPDATED using Papa Parse) ---
+// --- 1. CSV Loading and Parsing (Papa Parse - UNCHANGED) ---
 
 function loadSpells(url) {
     return new Promise((resolve, reject) => {
-        // Papa.parse handles fetching the file (url), reading it, 
-        // and parsing it into a structured object.
         Papa.parse(url, {
-            download: true,       // Tell Papa Parse to download the file from the URL
-            header: true,         // Use the first row as object keys (Spell Name, Requirement, etc.)
-            skipEmptyLines: true, // Ignore any blank rows in the CSV
-            
+            download: true,
+            header: true,
+            skipEmptyLines: true,
             complete: function(results) {
-                // Papa Parse stores the clean data in results.data
                 resolve(results.data);
             },
             error: function(error) {
@@ -23,8 +20,26 @@ function loadSpells(url) {
     });
 }
 
+// --- 2. Event Handler for Checkbox (NEW) ---
 
-// --- 2. Display Utility (UNCHANGED from previous version) ---
+function handleOverrideChange(event) {
+    const checkbox = event.target;
+    const spellName = checkbox.dataset.spellName;
+    
+    if (checkbox.checked) {
+        // Add spell to our tracking set
+        mySpells.add(spellName);
+        console.log(`Added: ${spellName}`);
+    } else {
+        // Remove spell from our tracking set
+        mySpells.delete(spellName);
+        console.log(`Removed: ${spellName}`);
+    }
+    
+    // NOTE: This is where we would trigger an update to the "My Spells" list display later.
+}
+
+// --- 3. Display Utility (UPDATED) ---
 
 function renderSpells(spellsToDisplay) {
     const listContainer = document.getElementById('spell-list');
@@ -41,10 +56,24 @@ function renderSpells(spellsToDisplay) {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        // Output structure using your column names. 
-        // Note: Papa Parse preserves the original column headers, including spaces.
+        // Ensure checkbox state is maintained when rerendering the list
+        const isChecked = mySpells.has(spell['Spell Name']) ? 'checked' : '';
+        
+        // Output structure 
         card.innerHTML = `
-            <h3>${spell['Spell Name']}</h3>
+            <div class="card-header">
+                <h3>${spell['Spell Name']}</h3>
+                <div class="override-control">
+                    <input 
+                        type="checkbox" 
+                        id="override-${spell['Spell Name'].replace(/ /g, '-')}" 
+                        data-spell-name="${spell['Spell Name']}"
+                        ${isChecked}
+                    >
+                    <label for="override-${spell['Spell Name'].replace(/ /g, '-')}" class="override-label">Override Reqs</label>
+                </div>
+            </div>
+            
             <div class="spell-detail"><strong>Requirement:</strong> ${spell.Requirement}</div>
             <div class="spell-detail"><strong>Range / Cast Time:</strong> ${spell['RangeCast Time']}</div>
             <div class="spell-detail"><strong>FP Cost:</strong> ${spell['FP Cost']}</div>
@@ -61,10 +90,16 @@ function renderSpells(spellsToDisplay) {
             </div>
         `;
         listContainer.appendChild(card);
+        
+        // Attach the event listener to the newly created checkbox
+        const checkbox = card.querySelector(`[data-spell-name="${spell['Spell Name']}"]`);
+        if (checkbox) {
+            checkbox.addEventListener('change', handleOverrideChange);
+        }
     });
 }
 
-// --- 3. Live Search Logic (UNCHANGED from previous version) ---
+// --- 4. Live Search Logic (UNCHANGED) ---
 
 function filterSpellsBySearch() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
@@ -75,28 +110,24 @@ function filterSpellsBySearch() {
     }
     
     const filteredSpells = allSpells.filter(spell => 
-        // Check if the spell name includes the search term
         spell['Spell Name'].toLowerCase().includes(searchTerm)
     );
     
     renderSpells(filteredSpells);
 }
 
-// --- 4. Initialization (UPDATED for Papa Parse) ---
+// --- 5. Initialization (UNCHANGED) ---
 
 (async function init() {
-    // Note: loadSpells is now a regular promise-returning function, not async
     try {
         const spellsData = await loadSpells(CSV_FILE_NAME);
-        allSpells = spellsData; // Store data globally
+        allSpells = spellsData; 
         
-        // Initial display: Show all spells immediately after loading
         renderSpells(allSpells);
 
-        // Attach event listener to the search input for live filtering
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
-        console.log("App initialized. Papa Parse loaded data successfully.");
+        console.log("App initialized. Override tracking ready.");
 
     } catch (error) {
         console.error("Critical error during loading or display:", error);
