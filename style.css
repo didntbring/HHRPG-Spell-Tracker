@@ -41,10 +41,10 @@ main {
 
 /* --- Spell List and Card Styling (Smaller, Rounded) --- */
 #spell-list {
-    display: grid !important;
-    gap: 15px !important; /* Reduced gap */
+    display: grid;
+    gap: 15px; /* Reduced gap */
     /* Ensure a minimum of 280px width per card */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; 
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
 }
 
 .spell-card {
