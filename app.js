@@ -3,7 +3,7 @@ const STORAGE_KEY = 'characterCreatorData';
 let allSpells = []; 
 let mySpells = new Set(); 
 
-// Data for dropdowns (UNMODIFIED)
+// Data for dropdowns
 const HALLS = ["Arcanium", "Assassins", "Animalians", "Coterie", "Alchemists", "Stone Singers", "Oestomancers", "Metallum Nocturn", "Aura Healers", "Protectors"];
 const LEVELS = Array.from({length: 20}, (_, i) => i + 1); // 1-20
 const FPS = Array.from({length: 21}, (_, i) => i + 10); // 10-30
@@ -11,8 +11,11 @@ const ELEMENTS = Array.from({length: 11}, (_, i) => i); // 0-10
 const STATS = Array.from({length: 13}, (_, i) => i + 8); // 8-20
 const CORE_STATS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 
-// --- Utility Functions (Local Storage & Populating Selects - UNMODIFIED) ---
-// ... (The populateSelect, saveCharacterData, loadCharacterData functions go here) ...
+
+// =========================================================================
+// 1. UTILITY FUNCTIONS (Local Storage, Select Population, and Filtering)
+// =========================================================================
+
 function populateSelect(id, values, defaultValue = null) {
     const select = document.getElementById(id);
     if (!select) return; 
@@ -54,7 +57,7 @@ function saveCharacterData() {
         cha: document.getElementById('cha').value,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    console.log("Character data saved.");
+    // NOTE: filterAvailableSpells is called by the form 'change' listener, not here
 }
 
 function loadCharacterData() {
@@ -77,18 +80,82 @@ function loadCharacterData() {
         document.getElementById('int').value = data.int || '';
         document.getElementById('wis').value = data.wis || '';
         document.getElementById('cha').value = data.cha || '';
-
-        console.log("Character data loaded.");
     }
 }
 
+// === NEW Filtering Logic ===
 
-// --- Tab Switching Logic (Slightly modified to include 'my-spells') ---
+function getCharacterStats() {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (!savedData) return {};
+    
+    const data = JSON.parse(savedData);
+    
+    // Convert necessary fields to integers (use 0 if undefined/empty)
+    data.level = parseInt(data.level) || 0;
+    data.fp = parseInt(data.fp) || 0;
+    data.fire = parseInt(data.fire) || 0;
+    data.air = parseInt(data.air) || 0;
+    data.spirit = parseInt(data.spirit) || 0;
+    data.earth = parseInt(data.earth) || 0;
+    data.water = parseInt(data.water) || 0;
+    data.str = parseInt(data.str) || 0;
+    data.dex = parseInt(data.dex) || 0;
+    data.con = parseInt(data.con) || 0;
+    data.int = parseInt(data.int) || 0;
+    data.wis = parseInt(data.wis) || 0;
+    data.cha = parseInt(data.cha) || 0;
+    
+    return data;
+}
+
+function checkSpellRequirements(spell, character) {
+    const requirementText = spell.Requirement;
+    
+    if (!requirementText || requirementText.trim().toLowerCase() === 'none') {
+        return true;
+    }
+
+    const individualRequirements = requirementText.split(/,\s*/);
+
+    for (const req of individualRequirements) {
+        const parts = req.trim().split(/\s+/);
+        if (parts.length !== 2) continue; 
+
+        const statName = parts[0].toLowerCase();
+        const requiredValue = parseInt(parts[1]); 
+
+        const characterStatValue = character[statName]; 
+
+        // If stat is not set or value is too low, the requirement is NOT met
+        if (characterStatValue === undefined || characterStatValue < requiredValue) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+// =========================================================================
+// 2. DATA LOAD & TAB LOGIC
+// =========================================================================
+
+function loadSpells(url) {
+    return new Promise((resolve, reject) => {
+        Papa.parse(url, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) { resolve(results.data); },
+            error: function(error) { reject(error); }
+        });
+    });
+}
 
 function switchTab(tabId) {
-    // If switching to the My Spells tab, render the list first
     if (tabId === 'my-spells') {
-        renderMySpells();
+        // Rerender My Spells just before switching to ensure it's up to date
+        renderMySpells(); 
     }
     
     document.querySelectorAll('.tab-content').forEach(section => {
@@ -104,21 +171,9 @@ function switchTab(tabId) {
 }
 
 
-// --- Papa Parse and Search Logic (Reused) ---
-
-function loadSpells(url) {
-    return new Promise((resolve, reject) => {
-        Papa.parse(url, {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) { resolve(results.data); },
-            error: function(error) { reject(error); }
-        });
-    });
-}
-
-// --- Event Handler for Checkbox (UPDATED to trigger renderMySpells) ---
+// =========================================================================
+// 3. EVENT HANDLERS & RENDERING
+// =========================================================================
 
 function handleOverrideChange(event) {
     const checkbox = event.target;
@@ -126,23 +181,20 @@ function handleOverrideChange(event) {
     
     if (checkbox.checked) {
         mySpells.add(spellName);
-        // NEW: Switch to My Spells tab when a spell is overridden
         switchTab('my-spells'); 
     } else {
         mySpells.delete(spellName);
     }
     
-    // Always update the My Spells list if we're on that tab or not
-    renderMySpells(); 
+    // Always call the filter to update the My Spells list accurately, including overrides
+    filterAvailableSpells();
 }
 
-
-// --- Display Utility (CORRECTED ID and Layout Fixes) ---
-
-// Removed the containerId parameter, as we only render to the main #spell-list now.
-function renderSpellCards(spellsToDisplay) {
-    // Target the main container
-    const listContainer = document.getElementById('spell-list'); 
+// Renders cards to a specific container ID
+function renderSpellCards(spellsToDisplay, containerId) {
+    const listContainer = document.getElementById(containerId); 
+    if (!listContainer) return; // Safety check
+    
     listContainer.innerHTML = ''; 
 
     if (spellsToDisplay.length === 0) {
@@ -150,12 +202,10 @@ function renderSpellCards(spellsToDisplay) {
         return;
     }
 
-    // ... (rest of the card generation logic is unchanged) ...
     spellsToDisplay.forEach(spell => {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        // Ensure checkbox state is maintained when rendering the list
         const isChecked = mySpells.has(spell['Spell Name']) ? 'checked' : '';
         
         card.innerHTML = `
@@ -190,7 +240,6 @@ function renderSpellCards(spellsToDisplay) {
         `;
         listContainer.appendChild(card);
         
-        // Attach the event listener to the newly created checkbox
         const checkbox = card.querySelector(`[data-spell-name="${spell['Spell Name']}"]`);
         if (checkbox) {
             checkbox.addEventListener('change', handleOverrideChange);
@@ -198,56 +247,61 @@ function renderSpellCards(spellsToDisplay) {
     });
 }
 
-// Function to render the ALL spells list (wraps the generic renderSpellCards)
 function renderAllSpells(spells = allSpells) {
     document.querySelector('#all-spells h2').textContent = `All Spells (${spells.length}):`;
-    // Calls the simplified function
-    renderSpellCards(spells); 
+    // Targets the original #spell-list container
+    renderSpellCards(spells, 'spell-list'); 
 }
 
-// --- Initialization Block (Final Correction) ---
+function filterAvailableSpells() {
+    const characterStats = getCharacterStats();
+    let availableSpells = [];
+    let overriddenSpells = new Set();
+    
+    // Preserve currently checked spells that are being manually overridden
+    allSpells.forEach(spell => {
+        if (mySpells.has(spell['Spell Name'])) {
+            // Check the state of the checkbox in the DOM to see if it's currently checked
+            const checkbox = document.getElementById(`override-${spell['Spell Name'].replace(/ /g, '-')}`);
+            if (checkbox && checkbox.checked) {
+                overriddenSpells.add(spell['Spell Name']);
+            }
+        }
+    });
 
-(async function init() {
-    try {
-        // ... (Papa Parse, dropdown population, data loading, tab listeners UNCHANGED) ...
-
-        // 4. Initial spell display and search listener
-        renderAllSpells(allSpells); 
-        renderMySpells(); 
+    // 1. Determine all spells that are available (by req or by override)
+    allSpells.forEach(spell => {
+        const meetsRequirements = checkSpellRequirements(spell, characterStats);
         
-        // The line that was previously failing should now work:
-        document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
+        if (meetsRequirements || overriddenSpells.has(spell['Spell Name'])) {
+            availableSpells.push(spell);
+        }
+    });
 
-        console.log("App fully initialized. Critical error resolved.");
+    // 2. Update the global mySpells set to reflect the final, calculated list
+    mySpells.clear();
+    availableSpells.forEach(spell => mySpells.add(spell['Spell Name']));
 
-    } catch (error) {
-        console.error("Critical error during loading or display:", error);
-        // Corrected the ID here as well
-        document.getElementById('spell-list').innerHTML = `
-            <p style="color: red;">Error loading data. Check the CSV file name and browser console.</p>
-        `;
-    }
-})();
+    // 3. Re-render the 'My Spells' tab
+    renderMySpells();
+}
 
-// Function to render the MY spells list (NEW)
 function renderMySpells() {
-    // 1. Filter the entire spell list to only include spells whose names are in the 'mySpells' Set
+    // We run the filter logic here to get the list, or rely on filterAvailableSpells being run
+    // Since filterAvailableSpells updates mySpells, we can filter against the global set.
     const mySpellList = allSpells.filter(spell => mySpells.has(spell['Spell Name']));
     
     document.querySelector('#my-spells h2').textContent = `Your Spell List (${mySpellList.length} Spells):`;
     
-    // 2. Render the filtered list to the dedicated container
-    renderSpellCards(mySpellList, 'spell-list-my');
+    // Targets the dedicated #spell-list-my container
+    renderSpellCards(mySpellList, 'spell-list-my'); 
 }
-
-
-// --- Live Search Logic (UPDATED to call renderAllSpells) ---
 
 function filterSpellsBySearch() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     
     if (!searchTerm) {
-        renderAllSpells(allSpells); // Pass allSpells to renderAllSpells if no search term
+        renderAllSpells(allSpells); 
         return;
     }
     
@@ -259,7 +313,9 @@ function filterSpellsBySearch() {
 }
 
 
-// --- Initialization ---
+// =========================================================================
+// 4. INITIALIZATION
+// =========================================================================
 
 (async function init() {
     try {
@@ -277,9 +333,15 @@ function filterSpellsBySearch() {
         populateSelect('water', ELEMENTS);
         CORE_STATS.forEach(stat => populateSelect(stat, STATS));
 
-        // 2. Load saved data and attach save listeners
+        // 2. Load saved data and attach save/filter listeners
         loadCharacterData();
-        document.getElementById('character-form').addEventListener('change', saveCharacterData);
+        
+        const form = document.getElementById('character-form');
+        form.addEventListener('change', () => {
+            saveCharacterData();
+            filterAvailableSpells(); // Filter spells whenever a stat changes
+        });
+        
         document.getElementById('char-name').addEventListener('input', saveCharacterData);
 
 
@@ -288,17 +350,17 @@ function filterSpellsBySearch() {
             button.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
         });
 
-        // 4. Initial spell display and search listener
-        renderAllSpells(allSpells); // Initial render of the main list
-        renderMySpells(); // Initial empty render of the my spells list
+        // 4. Initial render
+        filterAvailableSpells(); // Run filter first to populate mySpells based on loaded character data
+        renderAllSpells(allSpells); 
         
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
-        console.log("App fully initialized. My Spells tab ready.");
+        console.log("App fully initialized. Spell Requirement filtering is now active.");
 
     } catch (error) {
         console.error("Critical error during loading or display:", error);
-        document.getElementById('spell-list-all').innerHTML = `
+        document.getElementById('spell-list').innerHTML = `
             <p style="color: red;">Error loading data. Check the CSV file name and browser console.</p>
         `;
     }
