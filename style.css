@@ -136,3 +136,91 @@ main {
 .spell-card h3 {
     border-bottom: none; 
 }
+/* --- Tab Navigation Styles --- */
+nav {
+    padding: 0 20px;
+    background-color: #4e342e; /* Slightly darker header color */
+    display: flex;
+    justify-content: center;
+}
+
+.tab-button {
+    background-color: #5d4037;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    font-size: 1.1em;
+    border-radius: 5px 5px 0 0;
+    margin: 0 2px;
+}
+
+.tab-button:hover {
+    background-color: #795548;
+}
+
+.tab-button.active {
+    background-color: #f4f4f9; /* Match background for "raised" look */
+    color: #333;
+    font-weight: bold;
+    cursor: default;
+}
+
+/* --- Tab Content Hiding --- */
+.tab-content {
+    display: none;
+    padding: 20px 0;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* --- Character Form Styles --- */
+#character-form fieldset {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+#character-form legend {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #5d4037;
+    padding: 0 10px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Grid layout for stats */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+#character-form input[type="text"], 
+#character-form select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.save-status {
+    text-align: right;
+    font-style: italic;
+    color: #4CAF50;
+    font-size: 0.9em;
+}
