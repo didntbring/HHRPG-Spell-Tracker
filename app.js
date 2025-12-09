@@ -75,7 +75,8 @@ function renderSpells(spellsToDisplay) {
             </div>
             
             <div class="spell-detail"><strong>Requirement:</strong> ${spell.Requirement}</div>
-            <div class="spell-detail"><strong>Range / Cast Time:</strong> ${spell['RangeCast Time']}</div>
+            <div class="spell-detail"><strong>Range:</strong> ${spell.Range}</div>
+            <div class="spell-detail"><strong>Cast Time:</strong> ${spell['Cast Time']}</div>
             <div class="spell-detail"><strong>FP Cost:</strong> ${spell['FP Cost']}</div>
             <div class="spell-detail"><strong>Duration:</strong> ${spell.Duration}</div>
             <div class="spell-detail"><strong>Rarity:</strong> ${spell.Rarity}</div>
