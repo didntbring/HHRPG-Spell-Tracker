@@ -137,10 +137,12 @@ function handleOverrideChange(event) {
 }
 
 
-// --- Display Utility (RENAMED and Container ID changed) ---
+// --- Display Utility (CORRECTED ID and Layout Fixes) ---
 
-function renderSpellCards(spellsToDisplay, containerId) {
-    const listContainer = document.getElementById(containerId);
+// Removed the containerId parameter, as we only render to the main #spell-list now.
+function renderSpellCards(spellsToDisplay) {
+    // Target the main container
+    const listContainer = document.getElementById('spell-list'); 
     listContainer.innerHTML = ''; 
 
     if (spellsToDisplay.length === 0) {
@@ -148,6 +150,7 @@ function renderSpellCards(spellsToDisplay, containerId) {
         return;
     }
 
+    // ... (rest of the card generation logic is unchanged) ...
     spellsToDisplay.forEach(spell => {
         const card = document.createElement('div');
         card.className = 'spell-card';
@@ -198,8 +201,33 @@ function renderSpellCards(spellsToDisplay, containerId) {
 // Function to render the ALL spells list (wraps the generic renderSpellCards)
 function renderAllSpells(spells = allSpells) {
     document.querySelector('#all-spells h2').textContent = `All Spells (${spells.length}):`;
-    renderSpellCards(spells, 'spell-list-all');
+    // Calls the simplified function
+    renderSpellCards(spells); 
 }
+
+// --- Initialization Block (Final Correction) ---
+
+(async function init() {
+    try {
+        // ... (Papa Parse, dropdown population, data loading, tab listeners UNCHANGED) ...
+
+        // 4. Initial spell display and search listener
+        renderAllSpells(allSpells); 
+        renderMySpells(); 
+        
+        // The line that was previously failing should now work:
+        document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
+
+        console.log("App fully initialized. Critical error resolved.");
+
+    } catch (error) {
+        console.error("Critical error during loading or display:", error);
+        // Corrected the ID here as well
+        document.getElementById('spell-list').innerHTML = `
+            <p style="color: red;">Error loading data. Check the CSV file name and browser console.</p>
+        `;
+    }
+})();
 
 // Function to render the MY spells list (NEW)
 function renderMySpells() {
