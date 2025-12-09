@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Spells Display</title>
+    <title>All Spells Search</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,9 +12,17 @@
     </header>
 
     <main>
-        <div id="spell-list">
-            <p>Loading spells...</p>
+        <div class="controls">
+            <label for="search-input">Search Spells by Name:</label>
+            <input type="text" id="search-input" placeholder="Start typing a spell name...">
         </div>
+        
+        <section id="spell-results">
+            <h2></h2> 
+            <div id="spell-list">
+                <p>Loading spells...</p>
+            </div>
+        </section>
     </main>
 
     <script src="app.js"></script>
