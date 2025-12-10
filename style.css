@@ -228,3 +228,28 @@ nav {
     color: #4CAF50;
     font-size: 0.9em;
 }
+/* --- Rarity Lock Styling (Grayed Out) --- */
+.spell-card.grayed-out {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+    pointer-events: none; /* Prevents interaction with card content */
+    border: 1px dashed #bcaaa4;
+    order: 1; /* Pushes the grayed-out card to the bottom in the flex/grid order */
+}
+
+/* Allow the specific 'Learn Spell' checkbox to be clickable */
+.spell-card.grayed-out .rarity-control {
+    opacity: 1;
+    pointer-events: all; 
+}
+
+/* Style for the Learn Spell label */
+.rarity-control .override-label {
+    color: #f44336; /* Red color for 'Learn' button text */
+    font-weight: bold;
+}
+
+/* Ensure the title remains readable */
+.spell-card.grayed-out h3 {
+    color: #333 !important; 
+}
