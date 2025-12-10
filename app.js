@@ -2,6 +2,8 @@ const CSV_FILE_NAME = "HH Data NEW - Sheet1.csv";
 const STORAGE_KEY = 'characterCreatorData';
 let allSpells = []; 
 let mySpells = new Set(); 
+// NEW: Tracks ONLY the spells the user has manually checked.
+let userOverrides = new Set(); 
 
 // Data for dropdowns
 const HALLS = ["Arcanium", "Assassins", "Animalians", "Coterie", "Alchemists", "Stone Singers", "Oestomancers", "Metallum Nocturn", "Aura Healers", "Protectors"];
@@ -83,7 +85,7 @@ function loadCharacterData() {
     }
 }
 
-// === NEW Filtering Logic ===
+// === Filtering Logic ===
 
 function getCharacterStats() {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -179,14 +181,15 @@ function handleOverrideChange(event) {
     const checkbox = event.target;
     const spellName = checkbox.dataset.spellName;
     
+    // **CRITICAL CHANGE:** Only modify the set dedicated to manual user choices (userOverrides)
     if (checkbox.checked) {
-        mySpells.add(spellName);
+        userOverrides.add(spellName);
         switchTab('my-spells'); 
     } else {
-        mySpells.delete(spellName);
+        userOverrides.delete(spellName);
     }
     
-    // Always call the filter to update the My Spells list accurately, including overrides
+    // Trigger the filtering logic to update the 'My Spells' list based on the new override state
     filterAvailableSpells();
 }
 
@@ -206,7 +209,8 @@ function renderSpellCards(spellsToDisplay, containerId) {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        const isChecked = mySpells.has(spell['Spell Name']) ? 'checked' : '';
+        // **CRITICAL CHANGE:** Checkbox state is based ONLY on the userOverrides set
+        const isChecked = userOverrides.has(spell['Spell Name']) ? 'checked' : '';
         
         card.innerHTML = `
             <div class="card-header">
@@ -256,39 +260,33 @@ function renderAllSpells(spells = allSpells) {
 function filterAvailableSpells() {
     const characterStats = getCharacterStats();
     let availableSpells = [];
-    let overriddenSpells = new Set();
-    
-    // Preserve currently checked spells that are being manually overridden
-    allSpells.forEach(spell => {
-        if (mySpells.has(spell['Spell Name'])) {
-            // Check the state of the checkbox in the DOM to see if it's currently checked
-            const checkbox = document.getElementById(`override-${spell['Spell Name'].replace(/ /g, '-')}`);
-            if (checkbox && checkbox.checked) {
-                overriddenSpells.add(spell['Spell Name']);
-            }
-        }
-    });
 
-    // 1. Determine all spells that are available (by req or by override)
+    // 1. Determine all spells that are available (by req OR by manual override)
     allSpells.forEach(spell => {
+        const spellName = spell['Spell Name'];
         const meetsRequirements = checkSpellRequirements(spell, characterStats);
         
-        if (meetsRequirements || overriddenSpells.has(spell['Spell Name'])) {
+        // Requirements are met OR the spell is in the userOverrides set
+        if (meetsRequirements || userOverrides.has(spellName)) {
             availableSpells.push(spell);
         }
     });
 
     // 2. Update the global mySpells set to reflect the final, calculated list
+    // This set is used by renderMySpells to know what to display.
     mySpells.clear();
     availableSpells.forEach(spell => mySpells.add(spell['Spell Name']));
 
     // 3. Re-render the 'My Spells' tab
     renderMySpells();
+    
+    // 4. Re-render the 'All Spells' list to update the checkbox state immediately
+    // (This is important when a stat change makes a spell available/unavailable)
+    renderAllSpells(allSpells); 
 }
 
 function renderMySpells() {
-    // We run the filter logic here to get the list, or rely on filterAvailableSpells being run
-    // Since filterAvailableSpells updates mySpells, we can filter against the global set.
+    // Filters allSpells against the final calculated mySpells set
     const mySpellList = allSpells.filter(spell => mySpells.has(spell['Spell Name']));
     
     document.querySelector('#my-spells h2').textContent = `Your Spell List (${mySpellList.length} Spells):`;
@@ -351,6 +349,8 @@ function filterSpellsBySearch() {
         });
 
         // 4. Initial render
+        // We need to load any previous user overrides (if we implemented it)
+        // For now, we assume userOverrides starts empty on a fresh load unless you add save logic for it later.
         filterAvailableSpells(); // Run filter first to populate mySpells based on loaded character data
         renderAllSpells(allSpells); 
         
