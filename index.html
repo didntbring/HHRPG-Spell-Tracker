@@ -13,7 +13,7 @@
             <button class="tab-button active" data-tab="all-spells">All Spells</button>
             <button class="tab-button" data-tab="info">Character Info</button>
             <button class="tab-button" data-tab="my-spells">My Spells</button>
-        </nav>
+            <button class="tab-button" data-tab="items">Items</button>         </nav>
     </header>
 
     <main>
@@ -45,7 +45,16 @@
             </div>
         </section>
 
-        <section id="info" class="tab-content">
+        <section id="items" class="tab-content">
+            <div class="items-controls">
+                <h2>Character Inventory</h2>
+                <button id="add-item-btn" class="control-button">Add Item</button>
+            </div>
+            <div id="item-list" class="item-grid">
+                <p>No items in inventory.</p>
+            </div>
+        </section>
+                <section id="info" class="tab-content">
             <h2>Character Information</h2>
             <form id="character-form">
                 
@@ -96,7 +105,29 @@
             </form>
         </section>
     </main>
-    
+
+    <div id="item-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3>Add New Inventory Item</h3>
+            <form id="item-form">
+                <div class="form-group">
+                    <label for="item-name">Item Name:</label>
+                    <input type="text" id="item-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-amount">Amount:</label>
+                    <input type="number" id="item-amount" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-description">Description:</label>
+                    <textarea id="item-description"></textarea>
+                </div>
+                <button type="submit" id="save-item-btn">Save Item</button>
+            </form>
+        </div>
+    </div>
+        
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="app.js"></script>
 </body>
