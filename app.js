@@ -1,9 +1,11 @@
 const CSV_FILE_NAME = "HH Data NEW - Sheet1.csv";
 const STORAGE_KEY = 'characterCreatorData';
+const LEARNED_STORAGE_KEY = 'learnedRaritySpells'; // NEW Storage Key
 let allSpells = []; 
 let mySpells = new Set(); 
-// Tracks ONLY the spells the user has manually checked.
 let userOverrides = new Set(); 
+// NEW: Tracks Uncommon/Rare spells the user has explicitly chosen to 'learn'.
+let learnedRaritySpells = new Set(); 
 
 // Data for dropdowns
 const HALLS = ["Arcanium", "Assassins", "Animalians", "Coterie", "Alchemists", "Stone Singers", "Oestomancers", "Metallum Nocturn", "Aura Healers", "Protectors"];
@@ -12,14 +14,14 @@ const FPS = Array.from({length: 21}, (_, i) => i + 10); // 10-30
 const ELEMENTS = Array.from({length: 11}, (_, i) => i); // 0-10
 const STATS = Array.from({length: 13}, (_, i) => i + 8); // 8-20
 const CORE_STATS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
-const ELEMENT_STATS = ['fire', 'air', 'spirit', 'earth', 'water']; // Added for ANY check
-
+const ELEMENT_STATS = ['fire', 'air', 'spirit', 'earth', 'water']; 
 
 // =========================================================================
 // 1. UTILITY FUNCTIONS (Local Storage, Select Population, and Filtering)
 // =========================================================================
 
 function populateSelect(id, values, defaultValue = null) {
+    // ... (unchanged) ...
     const select = document.getElementById(id);
     if (!select) return; 
 
@@ -85,16 +87,28 @@ function loadCharacterData() {
     }
 }
 
-// === Filtering Logic ===
+// NEW: Save and Load functions for Learned Rarity Spells
+function saveLearnedSpells() {
+    localStorage.setItem(LEARNED_STORAGE_KEY, JSON.stringify(Array.from(learnedRaritySpells)));
+}
+
+function loadLearnedSpells() {
+    const savedData = localStorage.getItem(LEARNED_STORAGE_KEY);
+    if (savedData) {
+        const spellArray = JSON.parse(savedData);
+        learnedRaritySpells = new Set(spellArray);
+    }
+}
+
+
+// === Filtering Logic (unchanged since last step) ===
 
 function getCharacterStats() {
     const savedData = localStorage.getItem(STORAGE_KEY);
-    // If no saved data, return an empty object, which defaults all numerical stats to 0
     if (!savedData) return {};
     
     const data = JSON.parse(savedData);
     
-    // Convert necessary fields to integers (use 0 if undefined/empty)
     data.level = parseInt(data.level) || 0;
     data.fp = parseInt(data.fp) || 0;
     data.fire = parseInt(data.fire) || 0;
@@ -171,13 +185,12 @@ function checkSpellRequirements(spell, character) {
         }
     }
     
-    // If we checked all OR clauses and none passed, the requirement is NOT met
     return false;
 }
 
 
 // =========================================================================
-// 2. DATA LOAD & TAB LOGIC
+// 2. DATA LOAD & TAB LOGIC (unchanged)
 // =========================================================================
 
 function loadSpells(url) {
@@ -194,7 +207,6 @@ function loadSpells(url) {
 
 function switchTab(tabId) {
     if (tabId === 'my-spells') {
-        // Rerender My Spells just before switching to ensure it's up to date
         renderMySpells(); 
     }
     
@@ -215,6 +227,7 @@ function switchTab(tabId) {
 // 3. EVENT HANDLERS & RENDERING
 // =========================================================================
 
+// Handler for the Manual Override checkbox (in All Spells tab)
 function handleOverrideChange(event) {
     const checkbox = event.target;
     const spellName = checkbox.dataset.spellName;
@@ -229,6 +242,26 @@ function handleOverrideChange(event) {
     filterAvailableSpells();
 }
 
+// NEW: Handler for the Learn Spell checkbox (in My Spells tab)
+function handleLearnRarityChange(event) {
+    const checkbox = event.target;
+    const spellName = checkbox.dataset.spellName;
+    
+    if (checkbox.checked) {
+        learnedRaritySpells.add(spellName);
+    } else {
+        learnedRaritySpells.delete(spellName);
+    }
+
+    saveLearnedSpells(); // Save the new learned status
+    
+    // Re-filter and re-render both lists to update the visual status
+    filterAvailableSpells(); 
+    // If the user unlearns a spell, we need to make sure the All Spells card grays out
+    renderAllSpells(allSpells);
+}
+
+
 // Renders cards to a specific container ID
 function renderSpellCards(spellsToDisplay, containerId) {
     const listContainer = document.getElementById(containerId); 
@@ -241,25 +274,76 @@ function renderSpellCards(spellsToDisplay, containerId) {
         return;
     }
 
-    spellsToDisplay.forEach(spell => {
+    // Check for my-spells container to apply custom sorting/styling
+    const isMySpellsList = containerId === 'spell-list-my';
+    
+    // Create a working list for My Spells to handle sorting
+    let sortedSpells = [...spellsToDisplay];
+
+    if (isMySpellsList) {
+        // Sort: Move grayed-out spells to the bottom
+        sortedSpells.sort((a, b) => {
+            const aIsLocked = (a.Rarity === 'Uncommon' || a.Rarity === 'Rare') && !learnedRaritySpells.has(a['Spell Name']);
+            const bIsLocked = (b.Rarity === 'Uncommon' || b.Rarity === 'Rare') && !learnedRaritySpells.has(b['Spell Name']);
+
+            if (aIsLocked && !bIsLocked) return 1; // a moves down
+            if (!aIsLocked && bIsLocked) return -1; // b moves down
+            return 0; // maintain original order otherwise
+        });
+    }
+
+    sortedSpells.forEach(spell => {
+        const spellName = spell['Spell Name'];
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        // Checkbox state is based ONLY on the userOverrides set
-        const isChecked = userOverrides.has(spell['Spell Name']) ? 'checked' : '';
-        
-        card.innerHTML = `
-            <div class="card-header">
-                <h3>${spell['Spell Name']}</h3>
+        const isRarityLocked = (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') && !learnedRaritySpells.has(spellName);
+
+        // Apply gray-out class if in My Spells list AND Rarity Locked
+        if (isMySpellsList && isRarityLocked) {
+            card.classList.add('grayed-out');
+        }
+
+        // --- Render Checkboxes based on Container ---
+        let checkboxHTML = '';
+        let isChecked = '';
+
+        if (isMySpellsList) {
+            // Render "Learn Spell" checkbox for Uncommon/Rare spells only
+            if (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') {
+                isChecked = learnedRaritySpells.has(spellName) ? 'checked' : '';
+                checkboxHTML = `
+                    <div class="override-control rarity-control">
+                        <input 
+                            type="checkbox" 
+                            id="learn-${spellName.replace(/ /g, '-')}" 
+                            data-spell-name="${spellName}"
+                            ${isChecked}
+                        >
+                        <label for="learn-${spellName.replace(/ /g, '-')}" class="override-label">${isChecked ? 'Learned' : 'Learn Spell'}</label>
+                    </div>
+                `;
+            }
+        } else {
+            // Render "Override Reqs" checkbox for All Spells list
+            isChecked = userOverrides.has(spellName) ? 'checked' : '';
+            checkboxHTML = `
                 <div class="override-control">
                     <input 
                         type="checkbox" 
-                        id="override-${spell['Spell Name'].replace(/ /g, '-')}" 
-                        data-spell-name="${spell['Spell Name']}"
+                        id="override-${spellName.replace(/ /g, '-')}" 
+                        data-spell-name="${spellName}"
                         ${isChecked}
                     >
-                    <label for="override-${spell['Spell Name'].replace(/ /g, '-')}" class="override-label">Override Reqs</label>
+                    <label for="override-${spellName.replace(/ /g, '-')}" class="override-label">Override Reqs</label>
                 </div>
+            `;
+        }
+        
+        card.innerHTML = `
+            <div class="card-header">
+                <h3>${spellName}</h3>
+                ${checkboxHTML}
             </div>
             
             <div class="spell-detail"><strong>Requirement:</strong> ${spell.Requirement}</div>
@@ -280,9 +364,17 @@ function renderSpellCards(spellsToDisplay, containerId) {
         `;
         listContainer.appendChild(card);
         
-        const checkbox = card.querySelector(`[data-spell-name="${spell['Spell Name']}"]`);
-        if (checkbox) {
-            checkbox.addEventListener('change', handleOverrideChange);
+        // Attach event listeners based on the checkbox type
+        if (!isMySpellsList) {
+            const checkbox = card.querySelector(`[id^="override-"]`);
+            if (checkbox) {
+                checkbox.addEventListener('change', handleOverrideChange);
+            }
+        } else if (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') {
+            const checkbox = card.querySelector(`[id^="learn-"]`);
+            if (checkbox) {
+                checkbox.addEventListener('change', handleLearnRarityChange);
+            }
         }
     });
 }
@@ -310,11 +402,8 @@ function filterAvailableSpells() {
     mySpells.clear();
     availableSpells.forEach(spell => mySpells.add(spell['Spell Name']));
 
-    // 3. Re-render the 'My Spells' tab
+    // 3. Re-render the lists
     renderMySpells();
-    
-    // 4. Re-render the 'All Spells' list to update the checkbox state 
-    // This is vital for the search functionality and initial load.
     renderAllSpells(allSpells); 
 }
 
@@ -364,6 +453,7 @@ function filterSpellsBySearch() {
 
         // 2. Load saved data and attach save/filter listeners
         loadCharacterData();
+        loadLearnedSpells(); // NEW: Load learned spell status
         
         const form = document.getElementById('character-form');
         form.addEventListener('change', () => {
@@ -380,7 +470,7 @@ function filterSpellsBySearch() {
         });
 
         // 4. Initial render
-        filterAvailableSpells(); // Run filter first to populate mySpells 
+        filterAvailableSpells();
         renderAllSpells(allSpells); 
         
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
