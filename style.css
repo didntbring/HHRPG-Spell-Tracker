@@ -253,3 +253,68 @@ nav {
 .spell-card.grayed-out h3 {
     color: #333 !important; 
 }
+
+/* =========================================================================
+ * --- NEW FP TRACKER STYLING ---
+ * =========================================================================
+ */
+.fp-tracker {
+    margin: 15px 0 25px 0;
+    padding: 10px 20px;
+    background-color: #fff8e1; /* Light parchment color */
+    border: 1px solid #d7ccc8;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.fp-tracker strong {
+    color: #5d4037;
+    margin-right: 10px;
+}
+
+/* FP Tracker Buttons */
+.fp-tracker button {
+    background-color: #5d4037;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    font-size: 1em;
+}
+
+.fp-tracker button:hover:not(:disabled) {
+    background-color: #795548;
+}
+
+/* Specific styling for the Use (-) button */
+#fp-use-btn {
+    background-color: #e57373; /* Reddish for subtraction */
+}
+
+#fp-use-btn:hover:not(:disabled) {
+    background-color: #ef9a9a;
+}
+
+/* Reset button styling */
+#fp-reset-btn {
+    background-color: #4CAF50;
+    margin-left: 10px;
+}
+
+#fp-reset-btn:hover:not(:disabled) {
+    background-color: #66BB6A;
+}
+
+/* Disabled state */
+.fp-tracker button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    color: #666;
+}
