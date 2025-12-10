@@ -2,7 +2,7 @@ const CSV_FILE_NAME = "HH Data NEW - Sheet1.csv";
 const STORAGE_KEY = 'characterCreatorData';
 let allSpells = []; 
 let mySpells = new Set(); 
-// NEW: Tracks ONLY the spells the user has manually checked.
+// Tracks ONLY the spells the user has manually checked.
 let userOverrides = new Set(); 
 
 // Data for dropdowns
@@ -12,6 +12,7 @@ const FPS = Array.from({length: 21}, (_, i) => i + 10); // 10-30
 const ELEMENTS = Array.from({length: 11}, (_, i) => i); // 0-10
 const STATS = Array.from({length: 13}, (_, i) => i + 8); // 8-20
 const CORE_STATS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+const ELEMENT_STATS = ['fire', 'air', 'spirit', 'earth', 'water']; // Added for ANY check
 
 
 // =========================================================================
@@ -59,7 +60,6 @@ function saveCharacterData() {
         cha: document.getElementById('cha').value,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    // NOTE: filterAvailableSpells is called by the form 'change' listener, not here
 }
 
 function loadCharacterData() {
@@ -89,6 +89,7 @@ function loadCharacterData() {
 
 function getCharacterStats() {
     const savedData = localStorage.getItem(STORAGE_KEY);
+    // If no saved data, return an empty object, which defaults all numerical stats to 0
     if (!savedData) return {};
     
     const data = JSON.parse(savedData);
@@ -111,6 +112,35 @@ function getCharacterStats() {
     return data;
 }
 
+// Helper to check a single requirement string (e.g., "Fire 2", "Animalians", "ANY 1")
+function checkSingleRequirement(req, character) {
+    const parts = req.trim().split(/\s+/);
+
+    if (parts.length === 1 && HALLS.includes(parts[0])) {
+        // Case: Requirement is a HALL (e.g., "Animalians")
+        return character.hall === parts[0];
+    }
+    
+    if (parts.length === 2) {
+        const statName = parts[0].toLowerCase();
+        const requiredValue = parseInt(parts[1]); 
+
+        if (statName === 'any') {
+            // Case: Requirement is "ANY X" (sum of all elements)
+            const totalElements = ELEMENT_STATS.reduce((sum, stat) => sum + character[stat], 0);
+            return totalElements >= requiredValue;
+        } 
+        
+        // Case: Requirement is a STAT or ELEMENT (e.g., "Fire 2", "Con 15")
+        const characterStatValue = character[statName]; 
+        return characterStatValue !== undefined && characterStatValue >= requiredValue;
+    }
+
+    // Default to false for unrecognized formats
+    return false;
+}
+
+// Main logic to parse the full Requirement text
 function checkSpellRequirements(spell, character) {
     const requirementText = spell.Requirement;
     
@@ -118,23 +148,31 @@ function checkSpellRequirements(spell, character) {
         return true;
     }
 
-    const individualRequirements = requirementText.split(/,\s*/);
+    // 1. Split by OR (Lowest precedence, check if ANY side passes)
+    const orClauses = requirementText.split(/\s+OR\s+/i);
 
-    for (const req of individualRequirements) {
-        const parts = req.trim().split(/\s+/);
-        if (parts.length !== 2) continue; 
+    for (const orClause of orClauses) {
+        // 2. Split by / (Highest precedence, check if ALL parts pass)
+        const andClauses = orClause.split(/\s*\/\s*/);
+        
+        let meetsAndRequirements = true;
 
-        const statName = parts[0].toLowerCase();
-        const requiredValue = parseInt(parts[1]); 
+        for (const andReq of andClauses) {
+            // Check each individual requirement (e.g., "Fire 1", "Air 1", "Animalians")
+            if (!checkSingleRequirement(andReq, character)) {
+                meetsAndRequirements = false;
+                break; // Failed an AND condition, move to the next OR clause
+            }
+        }
 
-        const characterStatValue = character[statName]; 
-
-        // If stat is not set or value is too low, the requirement is NOT met
-        if (characterStatValue === undefined || characterStatValue < requiredValue) {
-            return false;
+        // If all AND requirements in this OR clause passed, the entire requirement is met
+        if (meetsAndRequirements) {
+            return true;
         }
     }
-    return true;
+    
+    // If we checked all OR clauses and none passed, the requirement is NOT met
+    return false;
 }
 
 
@@ -181,7 +219,6 @@ function handleOverrideChange(event) {
     const checkbox = event.target;
     const spellName = checkbox.dataset.spellName;
     
-    // **CRITICAL CHANGE:** Only modify the set dedicated to manual user choices (userOverrides)
     if (checkbox.checked) {
         userOverrides.add(spellName);
         switchTab('my-spells'); 
@@ -189,14 +226,13 @@ function handleOverrideChange(event) {
         userOverrides.delete(spellName);
     }
     
-    // Trigger the filtering logic to update the 'My Spells' list based on the new override state
     filterAvailableSpells();
 }
 
 // Renders cards to a specific container ID
 function renderSpellCards(spellsToDisplay, containerId) {
     const listContainer = document.getElementById(containerId); 
-    if (!listContainer) return; // Safety check
+    if (!listContainer) return; 
     
     listContainer.innerHTML = ''; 
 
@@ -209,7 +245,7 @@ function renderSpellCards(spellsToDisplay, containerId) {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        // **CRITICAL CHANGE:** Checkbox state is based ONLY on the userOverrides set
+        // Checkbox state is based ONLY on the userOverrides set
         const isChecked = userOverrides.has(spell['Spell Name']) ? 'checked' : '';
         
         card.innerHTML = `
@@ -253,7 +289,6 @@ function renderSpellCards(spellsToDisplay, containerId) {
 
 function renderAllSpells(spells = allSpells) {
     document.querySelector('#all-spells h2').textContent = `All Spells (${spells.length}):`;
-    // Targets the original #spell-list container
     renderSpellCards(spells, 'spell-list'); 
 }
 
@@ -261,7 +296,6 @@ function filterAvailableSpells() {
     const characterStats = getCharacterStats();
     let availableSpells = [];
 
-    // 1. Determine all spells that are available (by req OR by manual override)
     allSpells.forEach(spell => {
         const spellName = spell['Spell Name'];
         const meetsRequirements = checkSpellRequirements(spell, characterStats);
@@ -273,25 +307,22 @@ function filterAvailableSpells() {
     });
 
     // 2. Update the global mySpells set to reflect the final, calculated list
-    // This set is used by renderMySpells to know what to display.
     mySpells.clear();
     availableSpells.forEach(spell => mySpells.add(spell['Spell Name']));
 
     // 3. Re-render the 'My Spells' tab
     renderMySpells();
     
-    // 4. Re-render the 'All Spells' list to update the checkbox state immediately
-    // (This is important when a stat change makes a spell available/unavailable)
+    // 4. Re-render the 'All Spells' list to update the checkbox state 
+    // This is vital for the search functionality and initial load.
     renderAllSpells(allSpells); 
 }
 
 function renderMySpells() {
-    // Filters allSpells against the final calculated mySpells set
     const mySpellList = allSpells.filter(spell => mySpells.has(spell['Spell Name']));
     
     document.querySelector('#my-spells h2').textContent = `Your Spell List (${mySpellList.length} Spells):`;
     
-    // Targets the dedicated #spell-list-my container
     renderSpellCards(mySpellList, 'spell-list-my'); 
 }
 
@@ -337,7 +368,7 @@ function filterSpellsBySearch() {
         const form = document.getElementById('character-form');
         form.addEventListener('change', () => {
             saveCharacterData();
-            filterAvailableSpells(); // Filter spells whenever a stat changes
+            filterAvailableSpells();
         });
         
         document.getElementById('char-name').addEventListener('input', saveCharacterData);
@@ -349,14 +380,12 @@ function filterSpellsBySearch() {
         });
 
         // 4. Initial render
-        // We need to load any previous user overrides (if we implemented it)
-        // For now, we assume userOverrides starts empty on a fresh load unless you add save logic for it later.
-        filterAvailableSpells(); // Run filter first to populate mySpells based on loaded character data
+        filterAvailableSpells(); // Run filter first to populate mySpells 
         renderAllSpells(allSpells); 
         
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
-        console.log("App fully initialized. Spell Requirement filtering is now active.");
+        console.log("App fully initialized. Comprehensive spell filtering is now active.");
 
     } catch (error) {
         console.error("Critical error during loading or display:", error);
