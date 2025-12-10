@@ -1,15 +1,17 @@
 const CSV_FILE_NAME = "HH Data NEW - Sheet1.csv";
 const STORAGE_KEY = 'characterCreatorData';
-const LEARNED_STORAGE_KEY = 'learnedRaritySpells'; // NEW Storage Key
+const LEARNED_STORAGE_KEY = 'learnedRaritySpells';
+const CURRENT_FP_STORAGE_KEY = 'currentFPState';
+const ITEMS_STORAGE_KEY = 'characterInventory'; // NEW Storage Key
+
 let allSpells = []; 
 let mySpells = new Set(); 
 let userOverrides = new Set(); 
-// NEW: Tracks Uncommon/Rare spells the user has explicitly chosen to 'learn'.
 let learnedRaritySpells = new Set(); 
-// NEW: Current FP state (separate from Max FP in Local Storage)
 let currentFP = 0; 
 
-const CURRENT_FP_STORAGE_KEY = 'currentFPState'; // NEW Storage Key
+// NEW: Array to hold inventory items
+let inventoryItems = [];
 
 // Data for dropdowns
 const HALLS = ["Arcanium", "Assassins", "Animalians", "Coterie", "Alchemists", "Stone Singers", "Oestomancers", "Metallum Nocturn", "Aura Healers", "Protectors"];
@@ -91,7 +93,6 @@ function loadCharacterData() {
     }
 }
 
-// NEW: Save and Load functions for Learned Rarity Spells
 function saveLearnedSpells() {
     localStorage.setItem(LEARNED_STORAGE_KEY, JSON.stringify(Array.from(learnedRaritySpells)));
 }
@@ -104,8 +105,6 @@ function loadLearnedSpells() {
     }
 }
 
-// --- NEW FP Management Functions ---
-
 function saveCurrentFP() {
     localStorage.setItem(CURRENT_FP_STORAGE_KEY, currentFP);
 }
@@ -114,11 +113,9 @@ function loadCurrentFP() {
     const maxFP = parseInt(document.getElementById('fp').value) || 0;
     const savedFP = localStorage.getItem(CURRENT_FP_STORAGE_KEY);
     
-    // If savedFP exists, use it.
     if (savedFP !== null && !isNaN(parseInt(savedFP))) {
         currentFP = parseInt(savedFP);
     } else {
-        // Otherwise, initialize current FP to Max FP.
         currentFP = maxFP;
     }
 }
@@ -126,13 +123,11 @@ function loadCurrentFP() {
 function updateFPDisplay() {
     const maxFP = parseInt(document.getElementById('fp').value) || 0;
     
-    // Safety clamp: Current FP should not exceed Max FP
     if (currentFP > maxFP) {
         currentFP = maxFP;
         saveCurrentFP(); 
     }
     
-    // Update the HTML display elements
     const currentDisplay = document.getElementById('current-fp-display');
     const maxDisplay = document.getElementById('max-fp-display');
     
@@ -143,7 +138,6 @@ function updateFPDisplay() {
         maxDisplay.textContent = maxFP;
     }
     
-    // Visually indicate low FP (optional)
     if (currentDisplay) {
         currentDisplay.style.color = (currentFP <= (maxFP / 4) && currentFP > 0) ? 'red' : 'inherit';
         if (currentFP === 0) {
@@ -151,14 +145,12 @@ function updateFPDisplay() {
         }
     }
     
-    // Disable buttons if limits are hit
     const recoverBtn = document.getElementById('fp-recover-btn');
     const useBtn = document.getElementById('fp-use-btn');
     if (recoverBtn) recoverBtn.disabled = currentFP >= maxFP;
     if (useBtn) useBtn.disabled = currentFP <= 0;
 }
 
-// Handler for the FP buttons
 function handleFPChange(action) {
     const maxFP = parseInt(document.getElementById('fp').value) || 0;
 
@@ -174,8 +166,67 @@ function handleFPChange(action) {
     saveCurrentFP();
 }
 
+// --- NEW ITEM MANAGEMENT FUNCTIONS ---
 
-// === Filtering Logic (unchanged since last step) ===
+function saveInventory() {
+    localStorage.setItem(ITEMS_STORAGE_KEY, JSON.stringify(inventoryItems));
+}
+
+function loadInventory() {
+    const savedItems = localStorage.getItem(ITEMS_STORAGE_KEY);
+    if (savedItems) {
+        inventoryItems = JSON.parse(savedItems);
+    }
+}
+
+function handleAddItemForm(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('item-name').value.trim();
+    const amount = parseInt(document.getElementById('item-amount').value);
+    const description = document.getElementById('item-description').value.trim();
+
+    if (name && amount > 0) {
+        // Simple way to ensure unique ID, though not foolproof, it's fine for local storage
+        const id = Date.now().toString(36) + Math.random().toString(36).substr(2); 
+
+        inventoryItems.push({ 
+            id: id,
+            name: name, 
+            amount: amount, 
+            description: description 
+        });
+        
+        saveInventory();
+        renderItems();
+        closeModal();
+        document.getElementById('item-form').reset(); // Clear form
+    }
+}
+
+function handleUseItem(itemId) {
+    const itemIndex = inventoryItems.findIndex(item => item.id === itemId);
+
+    if (itemIndex > -1) {
+        const item = inventoryItems[itemIndex];
+        
+        // Subtract 1 from amount
+        item.amount--; 
+
+        // If amount reaches 0, remove the item entirely
+        if (item.amount <= 0) {
+            inventoryItems.splice(itemIndex, 1);
+            alert(`Used and removed: ${item.name}`);
+        } else {
+            alert(`Used 1 of ${item.name}. ${item.amount} remaining.`);
+        }
+
+        saveInventory();
+        renderItems();
+    }
+}
+
+// === Filtering Logic (unchanged) ===
 
 function getCharacterStats() {
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -200,12 +251,10 @@ function getCharacterStats() {
     return data;
 }
 
-// Helper to check a single requirement string (e.g., "Fire 2", "Animalians", "ANY 1")
 function checkSingleRequirement(req, character) {
     const parts = req.trim().split(/\s+/);
 
     if (parts.length === 1 && HALLS.includes(parts[0])) {
-        // Case: Requirement is a HALL (e.g., "Animalians")
         return character.hall === parts[0];
     }
     
@@ -214,21 +263,17 @@ function checkSingleRequirement(req, character) {
         const requiredValue = parseInt(parts[1]); 
 
         if (statName === 'any') {
-            // Case: Requirement is "ANY X" (sum of all elements)
             const totalElements = ELEMENT_STATS.reduce((sum, stat) => sum + character[stat], 0);
             return totalElements >= requiredValue;
         } 
         
-        // Case: Requirement is a STAT or ELEMENT (e.g., "Fire 2", "Con 15")
         const characterStatValue = character[statName]; 
         return characterStatValue !== undefined && characterStatValue >= requiredValue;
     }
 
-    // Default to false for unrecognized formats
     return false;
 }
 
-// Main logic to parse the full Requirement text
 function checkSpellRequirements(spell, character) {
     const requirementText = spell.Requirement;
     
@@ -236,24 +281,20 @@ function checkSpellRequirements(spell, character) {
         return true;
     }
 
-    // 1. Split by OR (Lowest precedence, check if ANY side passes)
     const orClauses = requirementText.split(/\s+OR\s+/i);
 
     for (const orClause of orClauses) {
-        // 2. Split by / (Highest precedence, check if ALL parts pass)
         const andClauses = orClause.split(/\s*\/\s*/);
         
         let meetsAndRequirements = true;
 
         for (const andReq of andClauses) {
-            // Check each individual requirement (e.g., "Fire 1", "Air 1", "Animalians")
             if (!checkSingleRequirement(andReq, character)) {
                 meetsAndRequirements = false;
-                break; // Failed an AND condition, move to the next OR clause
+                break;
             }
         }
 
-        // If all AND requirements in this OR clause passed, the entire requirement is met
         if (meetsAndRequirements) {
             return true;
         }
@@ -264,7 +305,7 @@ function checkSpellRequirements(spell, character) {
 
 
 // =========================================================================
-// 2. DATA LOAD & TAB LOGIC (unchanged)
+// 2. DATA LOAD & TAB LOGIC
 // =========================================================================
 
 function loadSpells(url) {
@@ -282,6 +323,8 @@ function loadSpells(url) {
 function switchTab(tabId) {
     if (tabId === 'my-spells') {
         renderMySpells(); 
+    } else if (tabId === 'items') { // NEW: Render items when switching to the Items tab
+        renderItems();
     }
     
     document.querySelectorAll('.tab-content').forEach(section => {
@@ -294,6 +337,18 @@ function switchTab(tabId) {
 
     document.getElementById(tabId).classList.add('active');
     document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+}
+
+// --- MODAL CONTROLS ---
+const itemModal = document.getElementById('item-modal');
+const closeButton = itemModal ? itemModal.querySelector('.close-button') : null;
+
+function openModal() {
+    if (itemModal) itemModal.style.display = 'block';
+}
+
+function closeModal() {
+    if (itemModal) itemModal.style.display = 'none';
 }
 
 
@@ -327,16 +382,13 @@ function handleLearnRarityChange(event) {
         learnedRaritySpells.delete(spellName);
     }
 
-    saveLearnedSpells(); // Save the new learned status
-    
-    // Re-filter and re-render both lists to update the visual status
+    saveLearnedSpells();
     filterAvailableSpells(); 
-    // If the user unlearns a spell, we need to make sure the All Spells card grays out
     renderAllSpells(allSpells);
 }
 
 
-// Renders cards to a specific container ID
+// Renders cards to a specific container ID (unchanged)
 function renderSpellCards(spellsToDisplay, containerId) {
     const listContainer = document.getElementById(containerId); 
     if (!listContainer) return; 
@@ -344,7 +396,6 @@ function renderSpellCards(spellsToDisplay, containerId) {
     listContainer.innerHTML = ''; 
 
     if (spellsToDisplay.length === 0) {
-        // Only show the default message if there are no filters or spells
         if (containerId === 'spell-list-my') {
              listContainer.innerHTML = '<p>Add spells to your list by checking "Override Reqs" or filling out your Character Info!</p>';
         } else {
@@ -353,21 +404,17 @@ function renderSpellCards(spellsToDisplay, containerId) {
         return;
     }
 
-    // Check for my-spells container to apply custom sorting/styling
     const isMySpellsList = containerId === 'spell-list-my';
-    
-    // Create a working list for My Spells to handle sorting
     let sortedSpells = [...spellsToDisplay];
 
     if (isMySpellsList) {
-        // Sort: Move grayed-out spells to the bottom
         sortedSpells.sort((a, b) => {
             const aIsLocked = (a.Rarity === 'Uncommon' || a.Rarity === 'Rare') && !learnedRaritySpells.has(a['Spell Name']);
             const bIsLocked = (b.Rarity === 'Uncommon' || b.Rarity === 'Rare') && !learnedRaritySpells.has(b['Spell Name']);
 
-            if (aIsLocked && !bIsLocked) return 1; // a moves down
-            if (!aIsLocked && bIsLocked) return -1; // b moves down
-            return 0; // maintain original order otherwise
+            if (aIsLocked && !bIsLocked) return 1; 
+            if (!aIsLocked && bIsLocked) return -1; 
+            return 0;
         });
     }
 
@@ -378,17 +425,14 @@ function renderSpellCards(spellsToDisplay, containerId) {
         
         const isRarityLocked = (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') && !learnedRaritySpells.has(spellName);
 
-        // Apply gray-out class if in My Spells list AND Rarity Locked
         if (isMySpellsList && isRarityLocked) {
             card.classList.add('grayed-out');
         }
 
-        // --- Render Checkboxes based on Container ---
         let checkboxHTML = '';
         let isChecked = '';
 
         if (isMySpellsList) {
-            // Render "Learn Spell" checkbox for Uncommon/Rare spells only
             if (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') {
                 isChecked = learnedRaritySpells.has(spellName) ? 'checked' : '';
                 checkboxHTML = `
@@ -404,7 +448,6 @@ function renderSpellCards(spellsToDisplay, containerId) {
                 `;
             }
         } else {
-            // Render "Override Reqs" checkbox for All Spells list
             isChecked = userOverrides.has(spellName) ? 'checked' : '';
             checkboxHTML = `
                 <div class="override-control">
@@ -443,7 +486,6 @@ function renderSpellCards(spellsToDisplay, containerId) {
         `;
         listContainer.appendChild(card);
         
-        // Attach event listeners based on the checkbox type
         if (!isMySpellsList) {
             const checkbox = card.querySelector(`[id^="override-"]`);
             if (checkbox) {
@@ -471,17 +513,14 @@ function filterAvailableSpells() {
         const spellName = spell['Spell Name'];
         const meetsRequirements = checkSpellRequirements(spell, characterStats);
         
-        // Requirements are met OR the spell is in the userOverrides set
         if (meetsRequirements || userOverrides.has(spellName)) {
             availableSpells.push(spell);
         }
     });
 
-    // 2. Update the global mySpells set to reflect the final, calculated list
     mySpells.clear();
     availableSpells.forEach(spell => mySpells.add(spell['Spell Name']));
 
-    // 3. Re-render the lists
     renderMySpells();
     renderAllSpells(allSpells); 
 }
@@ -489,7 +528,9 @@ function filterAvailableSpells() {
 function renderMySpells() {
     const mySpellList = allSpells.filter(spell => mySpells.has(spell['Spell Name']));
     
-    document.querySelector('#my-spells h2').textContent = `Your Spell List (${mySpellList.length} Spells):`;
+    // NOTE: This H2 update logic is now handled in the HTML side, but keeping this
+    // for compatibility with potential future changes.
+    // document.querySelector('#my-spells h2').textContent = `Your Spell List (${mySpellList.length} Spells):`;
     
     renderSpellCards(mySpellList, 'spell-list-my'); 
 }
@@ -507,6 +548,38 @@ function filterSpellsBySearch() {
     );
     
     renderAllSpells(filteredSpells);
+}
+
+// --- NEW ITEM RENDERING ---
+
+function renderItems() {
+    const listContainer = document.getElementById('item-list');
+    listContainer.innerHTML = '';
+    
+    if (inventoryItems.length === 0) {
+        listContainer.innerHTML = '<p>No items in inventory.</p>';
+        return;
+    }
+
+    inventoryItems.forEach(item => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'item-card';
+        itemCard.innerHTML = `
+            <div class="item-header">
+                <h3>${item.name} (${item.amount})</h3>
+                <button class="use-item-btn" data-item-id="${item.id}" title="Use 1 (Removes item if quantity is 1)">Use</button>
+            </div>
+            <div class="item-description-block">
+                <p>${item.description || 'No description provided.'}</p>
+            </div>
+        `;
+        listContainer.appendChild(itemCard);
+    });
+
+    // Attach 'Use' button listeners after rendering
+    document.querySelectorAll('.use-item-btn').forEach(button => {
+        button.addEventListener('click', (e) => handleUseItem(e.target.dataset.itemId));
+    });
 }
 
 
@@ -532,14 +605,15 @@ function filterSpellsBySearch() {
 
         // 2. Load saved data and attach save/filter listeners
         loadCharacterData();
-        loadLearnedSpells(); // Load learned spell status
-        loadCurrentFP(); // NEW: Load the current FP state
+        loadLearnedSpells(); 
+        loadCurrentFP();
+        loadInventory(); // NEW: Load Inventory
+
         
         const form = document.getElementById('character-form');
         form.addEventListener('change', (e) => {
             saveCharacterData();
             
-            // If the 'fp' field changed (Max FP), reset current FP and update display
             if (e.target.id === 'fp') {
                 currentFP = parseInt(e.target.value) || 0;
                 saveCurrentFP();
@@ -562,10 +636,30 @@ function filterSpellsBySearch() {
         document.getElementById('fp-use-btn').addEventListener('click', () => handleFPChange('use'));
         document.getElementById('fp-reset-btn').addEventListener('click', () => handleFPChange('reset'));
 
-        // 5. Initial render and display update
+        // 5. NEW: Item Modal and Button Listeners
+        if (document.getElementById('add-item-btn')) {
+            document.getElementById('add-item-btn').addEventListener('click', openModal);
+        }
+        if (closeButton) {
+            closeButton.addEventListener('click', closeModal);
+        }
+        if (itemModal) {
+             window.addEventListener('click', (event) => {
+                if (event.target === itemModal) {
+                    closeModal();
+                }
+            });
+        }
+        if (document.getElementById('item-form')) {
+            document.getElementById('item-form').addEventListener('submit', handleAddItemForm);
+        }
+
+        // 6. Initial render and display update
         filterAvailableSpells();
         renderAllSpells(allSpells); 
-        updateFPDisplay(); // Initial call to set the display once Max FP is loaded
+        updateFPDisplay(); 
+        renderItems(); // Initial item render
+
         
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
