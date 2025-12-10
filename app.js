@@ -6,6 +6,10 @@ let mySpells = new Set();
 let userOverrides = new Set(); 
 // NEW: Tracks Uncommon/Rare spells the user has explicitly chosen to 'learn'.
 let learnedRaritySpells = new Set(); 
+// NEW: Current FP state (separate from Max FP in Local Storage)
+let currentFP = 0; 
+
+const CURRENT_FP_STORAGE_KEY = 'currentFPState'; // NEW Storage Key
 
 // Data for dropdowns
 const HALLS = ["Arcanium", "Assassins", "Animalians", "Coterie", "Alchemists", "Stone Singers", "Oestomancers", "Metallum Nocturn", "Aura Healers", "Protectors"];
@@ -98,6 +102,76 @@ function loadLearnedSpells() {
         const spellArray = JSON.parse(savedData);
         learnedRaritySpells = new Set(spellArray);
     }
+}
+
+// --- NEW FP Management Functions ---
+
+function saveCurrentFP() {
+    localStorage.setItem(CURRENT_FP_STORAGE_KEY, currentFP);
+}
+
+function loadCurrentFP() {
+    const maxFP = parseInt(document.getElementById('fp').value) || 0;
+    const savedFP = localStorage.getItem(CURRENT_FP_STORAGE_KEY);
+    
+    // If savedFP exists, use it.
+    if (savedFP !== null && !isNaN(parseInt(savedFP))) {
+        currentFP = parseInt(savedFP);
+    } else {
+        // Otherwise, initialize current FP to Max FP.
+        currentFP = maxFP;
+    }
+}
+
+function updateFPDisplay() {
+    const maxFP = parseInt(document.getElementById('fp').value) || 0;
+    
+    // Safety clamp: Current FP should not exceed Max FP
+    if (currentFP > maxFP) {
+        currentFP = maxFP;
+        saveCurrentFP(); 
+    }
+    
+    // Update the HTML display elements
+    const currentDisplay = document.getElementById('current-fp-display');
+    const maxDisplay = document.getElementById('max-fp-display');
+    
+    if (currentDisplay) {
+        currentDisplay.textContent = currentFP;
+    }
+    if (maxDisplay) {
+        maxDisplay.textContent = maxFP;
+    }
+    
+    // Visually indicate low FP (optional)
+    if (currentDisplay) {
+        currentDisplay.style.color = (currentFP <= (maxFP / 4) && currentFP > 0) ? 'red' : 'inherit';
+        if (currentFP === 0) {
+            currentDisplay.style.color = 'darkred';
+        }
+    }
+    
+    // Disable buttons if limits are hit
+    const recoverBtn = document.getElementById('fp-recover-btn');
+    const useBtn = document.getElementById('fp-use-btn');
+    if (recoverBtn) recoverBtn.disabled = currentFP >= maxFP;
+    if (useBtn) useBtn.disabled = currentFP <= 0;
+}
+
+// Handler for the FP buttons
+function handleFPChange(action) {
+    const maxFP = parseInt(document.getElementById('fp').value) || 0;
+
+    if (action === 'recover' && currentFP < maxFP) {
+        currentFP++;
+    } else if (action === 'use' && currentFP > 0) {
+        currentFP--;
+    } else if (action === 'reset') {
+        currentFP = maxFP;
+    }
+    
+    updateFPDisplay();
+    saveCurrentFP();
 }
 
 
@@ -242,7 +316,7 @@ function handleOverrideChange(event) {
     filterAvailableSpells();
 }
 
-// NEW: Handler for the Learn Spell checkbox (in My Spells tab)
+// Handler for the Learn Spell checkbox (in My Spells tab)
 function handleLearnRarityChange(event) {
     const checkbox = event.target;
     const spellName = checkbox.dataset.spellName;
@@ -270,7 +344,12 @@ function renderSpellCards(spellsToDisplay, containerId) {
     listContainer.innerHTML = ''; 
 
     if (spellsToDisplay.length === 0) {
-        listContainer.innerHTML = '<p>No spells to display.</p>';
+        // Only show the default message if there are no filters or spells
+        if (containerId === 'spell-list-my') {
+             listContainer.innerHTML = '<p>Add spells to your list by checking "Override Reqs" or filling out your Character Info!</p>';
+        } else {
+             listContainer.innerHTML = '<p>No spells to display.</p>';
+        }
         return;
     }
 
@@ -453,11 +532,20 @@ function filterSpellsBySearch() {
 
         // 2. Load saved data and attach save/filter listeners
         loadCharacterData();
-        loadLearnedSpells(); // NEW: Load learned spell status
+        loadLearnedSpells(); // Load learned spell status
+        loadCurrentFP(); // NEW: Load the current FP state
         
         const form = document.getElementById('character-form');
-        form.addEventListener('change', () => {
+        form.addEventListener('change', (e) => {
             saveCharacterData();
+            
+            // If the 'fp' field changed (Max FP), reset current FP and update display
+            if (e.target.id === 'fp') {
+                currentFP = parseInt(e.target.value) || 0;
+                saveCurrentFP();
+                updateFPDisplay(); 
+            }
+            
             filterAvailableSpells();
         });
         
@@ -469,9 +557,15 @@ function filterSpellsBySearch() {
             button.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
         });
 
-        // 4. Initial render
+        // 4. Attach FP button listeners
+        document.getElementById('fp-recover-btn').addEventListener('click', () => handleFPChange('recover'));
+        document.getElementById('fp-use-btn').addEventListener('click', () => handleFPChange('use'));
+        document.getElementById('fp-reset-btn').addEventListener('click', () => handleFPChange('reset'));
+
+        // 5. Initial render and display update
         filterAvailableSpells();
         renderAllSpells(allSpells); 
+        updateFPDisplay(); // Initial call to set the display once Max FP is loaded
         
         document.getElementById('search-input').addEventListener('input', filterSpellsBySearch);
 
