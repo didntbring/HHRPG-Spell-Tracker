@@ -255,7 +255,7 @@ nav {
 }
 
 /* =========================================================================
- * --- NEW FP TRACKER STYLING ---
+ * --- FP TRACKER STYLING ---
  * =========================================================================
  */
 .fp-tracker {
@@ -317,4 +317,148 @@ nav {
     background-color: #ccc;
     cursor: not-allowed;
     color: #666;
+}
+
+/* =========================================================================
+ * --- NEW ITEM TAB AND MODAL STYLING ---
+ * =========================================================================
+ */
+
+/* Item Controls Header */
+.items-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d7ccc8;
+}
+
+.control-button {
+    background-color: #8d6e63;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s;
+}
+
+.control-button:hover {
+    background-color: #bcaaa4;
+}
+
+/* Item List Grid */
+#item-list {
+    display: grid;
+    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Individual Item Card */
+.item-card {
+    background: #ffffff;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.item-card h3 {
+    margin: 0;
+    color: #5d4037;
+    font-size: 1.1em;
+}
+
+.item-description-block {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.use-item-btn {
+    background-color: #4CAF50; /* Green for use */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s;
+}
+
+.use-item-btn:hover {
+    background-color: #66BB6A;
+}
+
+
+/* --- MODAL STYLING --- */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 10; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.4); 
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; /* 10% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; 
+    max-width: 500px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#item-form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+#save-item-btn {
+    width: 100%;
+    margin-top: 15px;
+    background-color: #5d4037;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+#save-item-btn:hover {
+    background-color: #795548;
 }
