@@ -1,49 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Character Creator & Spell Finder</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Creator & Spell Finder</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>🧙 Character Creator & Spell Finder</h1>
-        <nav>
-            <button class="tab-button active" data-tab="all-spells">All Spells</button>
-            <button class="tab-button" data-tab="info">Character Info</button>
-            <button class="tab-button" data-tab="my-spells">My Spells</button>
-            <button class="tab-button" data-tab="items">Items</button>         </nav>
-    </header>
+    <header>
+        <h1>🧙 Character Creator & Spell Finder</h1>
+        <nav>
+            <button class="tab-button active" data-tab="all-spells">All Spells</button>
+            <button class="tab-button" data-tab="info">Character Info</button>
+            <button class="tab-button" data-tab="my-spells">My Spells</button>
+            <button class="tab-button" data-tab="items">Items</button>
+        </nav>
+    </header>
 
-    <main>
-       <section id="all-spells" class="tab-content active">
-            <div class="controls">
-                <label for="search-input">Search Spells by Name:</label>
-                <input type="text" id="search-input" placeholder="Start typing a spell name...">
-            </div>
-            
-            <section id="spell-results">
-                <h2>All Spells:</h2>
-                <div id="spell-list">
-                    <p>Loading spells...</p>
-                </div>
-            </section>
-        </section>
+    <main>
+        <section id="all-spells" class="tab-content active">
+            <div class="controls">
+                <label for="search-input">Search Spells by Name:</label>
+                <input type="text" id="search-input" placeholder="Start typing a spell name...">
+            </div>
+            
+            <section id="spell-results">
+                <h2>All Spells:</h2>
+                <div id="spell-list">
+                    <p>Loading spells...</p>
+                </div>
+            </section>
+        </section>
 
-        <section id="my-spells" class="tab-content">
-            <h2>Your Current Spell List:</h2>
+        <section id="my-spells" class="tab-content">
+            <h2>Your Current Spell List:</h2>
 
-                        <div class="fp-tracker" id="fp-tracker-display">
-                <strong>Available FP: <span id="current-fp-display">0</span> / <span id="max-fp-display">0</span></strong>
-                <button id="fp-recover-btn" title="Recover 1 FP">+</button>
-                <button id="fp-use-btn" title="Use 1 FP">-</button>
-                <button id="fp-reset-btn" title="Reset FP to Max">Reset</button>
-            </div>
-                        <div id="spell-list-my">
-                <p>Add spells to your list by checking "Override Reqs" or filling out your Character Info!</p>
-            </div>
-        </section>
+            <div class="fp-tracker" id="fp-tracker-display">
+                <strong>Available FP: <span id="current-fp-display">0</span> / <span id="max-fp-display">0</span></strong>
+                <button id="fp-recover-btn" title="Recover 1 FP">+</button>
+                <button id="fp-use-btn" title="Use 1 FP">-</button>
+                <button id="fp-reset-btn" title="Reset FP to Max">Reset</button>
+            </div>
+            
+            <div id="spell-list-my">
+                <p>Add spells to your list by checking "Override Reqs" or filling out your Character Info!</p>
+            </div>
+        </section>
 
         <section id="items" class="tab-content">
             <div class="items-controls">
@@ -54,57 +56,58 @@
                 <p>No items in inventory.</p>
             </div>
         </section>
-                <section id="info" class="tab-content">
-            <h2>Character Information</h2>
-            <form id="character-form">
-                
-                <fieldset>
-                    <legend>Basic Character Data</legend>
-                    <div class="form-group">
-                        <label for="char-name">Character Name:</label>
-                        <input type="text" id="char-name" placeholder="Enter Character Name">
-                    </div>
-                    <div class="form-group">
-                        <label for="level">Level:</label>
-                        <select id="level"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="fp">Focus Points (FP):</label>
-                        <select id="fp"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="hall">Hall/Affiliation:</label>
-                        <select id="hall"></select>
-                    </div>
-                </fieldset>
 
-                <fieldset>
-                    <legend>Elemental Attributes (0-10)</legend>
-                    <div class="form-grid">
-                        <div class="form-group"><label for="fire">Fire:</label><select id="fire"></select></div>
-                        <div class="form-group"><label for="air">Air:</label><select id="air"></select></div>
-                        <div class="form-group"><label for="spirit">Spirit:</label><select id="spirit"></select></div>
-                        <div class="form-group"><label for="earth">Earth:</label><select id="earth"></select></div>
-                        <div class="form-group"><label for="water">Water:</label><select id="water"></select></div>
-                    </div>
-                </fieldset>
+        <section id="info" class="tab-content">
+            <h2>Character Information</h2>
+            <form id="character-form">
+                
+                <fieldset>
+                    <legend>Basic Character Data</legend>
+                    <div class="form-group">
+                        <label for="char-name">Character Name:</label>
+                        <input type="text" id="char-name" placeholder="Enter Character Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="level">Level:</label>
+                        <select id="level"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="fp">Focus Points (FP):</label>
+                        <select id="fp"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hall">Hall/Affiliation:</label>
+                        <select id="hall"></select>
+                    </div>
+                </fieldset>
 
-                <fieldset>
-                    <legend>Core Attributes (8-20)</legend>
-                    <div class="form-grid">
-                        <div class="form-group"><label for="str">Strength:</label><select id="str"></select></div>
-                        <div class="form-group"><label for="dex">Dexterity:</label><select id="dex"></select></div>
-                        <div class="form-group"><label for="con">Constitution:</label><select id="con"></select></div>
-                        <div class="form-group"><label for="int">Intelligence:</label><select id="int"></select></div>
-                        <div class="form-group"><label for="wis">Wisdom:</label><select id="wis"></select></div>
-                        <div class="form-group"><label for="cha">Charisma:</label><select id="cha"></select></div>
-                    </div>
-                </fieldset>
-                
-                <p class="save-status">Character data automatically saved.</p>
-            </form>
-        </section>
-    </main>
+                <fieldset>
+                    <legend>Elemental Attributes (0-10)</legend>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="fire">Fire:</label><select id="fire"></select></div>
+                        <div class="form-group"><label for="air">Air:</label><select id="air"></select></div>
+                        <div class="form-group"><label for="spirit">Spirit:</label><select id="spirit"></select></div>
+                        <div class="form-group"><label for="earth">Earth:</label><select id="earth"></select></div>
+                        <div class="form-group"><label for="water">Water:</label><select id="water"></select></div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Core Attributes (8-20)</legend>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="str">Strength:</label><select id="str"></select></div>
+                        <div class="form-group"><label for="dex">Dexterity:</label><select id="dex"></select></div>
+                        <div class="form-group"><label for="con">Constitution:</label><select id="con"></select></div>
+                        <div class="form-group"><label for="int">Intelligence:</label><select id="int"></select></div>
+                        <div class="form-group"><label for="wis">Wisdom:</label><select id="wis"></select></div>
+                        <div class="form-group"><label for="cha">Charisma:</label><select id="cha"></select></div>
+                    </div>
+                </fieldset>
+                
+                <p class="save-status">Character data automatically saved.</p>
+            </form>
+        </section>
+    </main>
 
     <div id="item-modal" class="modal">
         <div class="modal-content">
@@ -127,8 +130,10 @@
             </form>
         </div>
     </div>
-        
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="app.js"></script>
+
+    <button id="back-to-top" title="Go to top">↑</button>
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
