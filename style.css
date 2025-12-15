@@ -19,7 +19,7 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.4;
-    font-size: 0.9rem; /* Smaller text globally */
+    font-size: 0.9rem;
 }
 
 header {
@@ -48,7 +48,7 @@ nav {
     background-color: #000;
     display: flex;
     justify-content: center;
-    overflow-x: auto; /* Scrollable tabs on mobile */
+    overflow-x: auto;
     white-space: nowrap;
 }
 
@@ -78,7 +78,7 @@ nav {
 }
 
 /* =========================================================================
-   3. SPELL & ITEM CARDS (COLLAPSIBLE LOGIC)
+   3. SPELL & ITEM CARDS
    ========================================================================= */
 #spell-list, #spell-list-my, #item-list {
     display: grid;
@@ -95,27 +95,21 @@ nav {
     transition: transform 0.2s, border-color 0.2s;
 }
 
-.spell-card:hover {
-    border-color: var(--accent-copper);
-}
-
-/* COLLAPSIBLE LOGIC: Hide description by default in All Spells */
 #spell-list .description-block {
     max-height: 0;
     overflow: hidden;
-    padding: 0 8px; /* Remove vertical padding while closed */
+    padding: 0 8px;
     margin-top: 0;
     transition: max-height 0.3s ease-out, padding 0.3s;
 }
 
-/* Expanded State */
 #spell-list .spell-card.expanded .description-block {
-    max-height: 500px; /* Large enough to fit text */
+    max-height: 500px;
     padding: 10px 8px;
     margin-top: 10px;
 }
 
-.spell-card h3 {
+.spell-card h3, .item-card h3 {
     margin: 0;
     color: var(--accent-gold);
     font-size: 1rem;
@@ -135,7 +129,79 @@ nav {
 }
 
 /* =========================================================================
-   4. UI CONTROLS & TRACKERS
+   4. MODAL & INVENTORY FORM (The Fix)
+   ========================================================================= */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Dark overlay */
+    backdrop-filter: blur(5px); /* Modern blur effect */
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    margin: 15vh auto;
+    padding: 20px;
+    border: 1px solid var(--accent-gold);
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative;
+    color: var(--text-main);
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: var(--text-dim);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: var(--accent-gold);
+}
+
+#item-form .form-group {
+    margin-bottom: 15px;
+}
+
+#item-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--accent-gold);
+    font-size: 0.8rem;
+}
+
+#item-form input, #item-form textarea {
+    width: 100%;
+    padding: 10px;
+    background: #000;
+    border: 1px solid var(--border-color);
+    color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#save-item-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-gold);
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* =========================================================================
+   5. UI CONTROLS & TRACKERS
    ========================================================================= */
 .controls {
     background-color: #1a1a1a;
@@ -143,7 +209,7 @@ nav {
     border-radius: 8px;
     margin-bottom: 20px;
     display: flex;
-    flex-direction: column; /* Better for mobile */
+    flex-direction: column;
     gap: 8px;
 }
 
@@ -161,14 +227,17 @@ nav {
     padding: 10px;
     border-radius: 8px;
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    gap: 15px;
 }
 
 /* =========================================================================
-   5. BACK TO TOP & BUTTONS
+   6. BACK TO TOP & BUTTONS
    ========================================================================= */
 #back-to-top {
-    display: none; 
+    display: none;
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -180,25 +249,24 @@ nav {
     border-radius: 50%;
     cursor: pointer;
     font-weight: bold;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
 }
 
 .use-item-btn, #fp-reset-btn {
     background-color: var(--accent-magic);
     color: black;
     font-weight: bold;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 /* =========================================================================
-   6. MOBILE OPTIMIZATION
+   7. MOBILE OPTIMIZATION
    ========================================================================= */
 @media screen and (max-width: 600px) {
     #spell-list, #spell-list-my, #item-list {
-        grid-template-columns: 1fr; /* Single column on phones */
-    }
-
-    .form-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns for stats instead of 1 */
+        grid-template-columns: 1fr;
     }
 
     .tab-button {
