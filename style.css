@@ -95,7 +95,9 @@ nav {
     transition: transform 0.2s, border-color 0.2s;
 }
 
-#spell-list .description-block {
+/* Updated to target both lists */
+#spell-list .description-block, 
+#spell-list-my .description-block {
     max-height: 0;
     overflow: hidden;
     padding: 0 8px;
@@ -103,7 +105,9 @@ nav {
     transition: max-height 0.3s ease-out, padding 0.3s;
 }
 
-#spell-list .spell-card.expanded .description-block {
+/* Updated to target both lists */
+#spell-list .spell-card.expanded .description-block,
+#spell-list-my .spell-card.expanded .description-block {
     max-height: 500px;
     padding: 10px 8px;
     margin-top: 10px;
@@ -129,18 +133,18 @@ nav {
 }
 
 /* =========================================================================
-   4. MODAL & INVENTORY FORM (The Fix)
+   4. MODAL & INVENTORY FORM
    ========================================================================= */
 .modal {
-    display: none; /* Hidden by default */
+    display: none;
     position: fixed;
     z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.85); /* Dark overlay */
-    backdrop-filter: blur(5px); /* Modern blur effect */
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
 }
 
 .modal-content {
