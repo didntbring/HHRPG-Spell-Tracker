@@ -1,464 +1,208 @@
+/* =========================================================================
+   1. GLOBAL STYLES & VARIABLES
+   ========================================================================= */
+:root {
+    --bg-dark: #121212;
+    --bg-card: #1e1e1e;
+    --text-main: #e0e0e0;
+    --text-dim: #b0b0b0;
+    --accent-gold: #d4af37;
+    --accent-copper: #8d6e63;
+    --accent-magic: #4db6ac;
+    --border-color: #333;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
-    color: #333;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     margin: 0;
     padding: 0;
-    line-height: 1.5;
+    line-height: 1.4;
+    font-size: 0.9rem; /* Smaller text globally */
 }
 
 header {
-    background-color: #5d4037;
-    color: white;
-    padding: 20px 0;
+    background-color: #0a0a0a;
+    color: var(--accent-gold);
+    padding: 15px 0;
     text-align: center;
+    border-bottom: 2px solid var(--accent-copper);
+}
+
+header h1 {
+    font-size: 1.4rem;
+    margin: 0;
 }
 
 main {
-    max-width: 1000px; /* Make the main container slightly wider */
-    margin: 20px auto;
-    padding: 0 20px;
+    max-width: 1100px;
+    margin: 10px auto;
+    padding: 0 10px;
 }
 
-/* --- Search and Controls Styling --- */
-.controls {
-    background-color: #e0e0e0;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-#search-input {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1em;
-}
-
-/* * --- Spell List and Card Styling (FIXED GRID LAYOUT) --- 
- * This targets BOTH the All Spells container (#spell-list) 
- * and the My Spells container (#spell-list-my)
- */
-#spell-list, 
-#spell-list-my {
-    display: grid;
-    gap: 15px; 
-    /* Enforces 300px minimum width, resulting in 3 columns on desktop */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-}
-
-.spell-card {
-    background: white;
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 12px; /* Rounded edges */
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
-    height: 100%; /* Ensure all cards are same height in the grid row */
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-}
-
-.spell-card h3 {
-    margin: 0 0 10px 0;
-    color: #8d6e63;
-    /* This style is now overridden by .card-header border-bottom */
-    border-bottom: 1px solid #eee; 
-    padding-bottom: 5px;
-    font-size: 1.1em; 
-}
-
-.spell-detail {
-    margin-bottom: 5px;
-    font-size: 0.85em; 
-}
-
-/* --- Description and Escalation Cleanup --- */
-.description-block {
-    margin-top: 10px;
-    border-left: 3px solid #bcaaa4;
-    padding-left: 10px;
-    background-color: #fafafa;
-    padding: 8px; 
-    border-radius: 3px;
-    font-size: 0.9em; 
-    overflow: hidden; 
-}
-
-.description-block strong {
-    display: block;
-    margin-bottom: 3px;
-    color: #5d4037;
-    font-size: 0.9em;
-}
-
-.description-block p {
-    margin: 0 0 5px 0;
-}
-/* --- New Checkbox Styling --- */
-
-/* Container for the spell title and checkbox */
-.card-header {
-    display: flex;
-    justify-content: space-between; 
-    align-items: center;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
-}
-
-.card-header h3 {
-    margin: 0; 
-    flex-shrink: 1;
-}
-
-/* Style for the checkbox group */
-.override-control {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8em;
-    font-weight: bold;
-    color: #4CAF50; 
-    white-space: nowrap; 
-    flex-shrink: 0;
-}
-
-.override-control input[type="checkbox"] {
-    cursor: pointer;
-}
-
-.override-label {
-    cursor: pointer;
-}
-
-/* Ensure the border in the card-header overrides the previous h3 border-bottom */
-.spell-card h3 {
-    border-bottom: none; /* Corrected: This rule was in the original and is kept */
-}
-/* --- Tab Navigation Styles --- */
+/* =========================================================================
+   2. NAVIGATION & TABS
+   ========================================================================= */
 nav {
-    padding: 0 20px;
-    background-color: #4e342e;
+    background-color: #000;
     display: flex;
     justify-content: center;
+    overflow-x: auto; /* Scrollable tabs on mobile */
+    white-space: nowrap;
 }
 
 .tab-button {
-    background-color: #5d4037;
-    color: white;
+    background: transparent;
+    color: var(--text-dim);
     border: none;
-    padding: 10px 20px;
+    padding: 12px 15px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-    font-size: 1.1em;
-    border-radius: 5px 5px 0 0;
-    margin: 0 2px;
-}
-
-.tab-button:hover {
-    background-color: #795548;
+    font-size: 0.85rem;
+    transition: 0.3s;
 }
 
 .tab-button.active {
-    background-color: #f4f4f9;
-    color: #333;
+    color: var(--accent-gold);
+    border-bottom: 2px solid var(--accent-gold);
     font-weight: bold;
-    cursor: default;
 }
 
-/* --- Tab Content Hiding --- */
 .tab-content {
     display: none;
-    padding: 20px 0;
+    padding: 15px 0;
 }
 
 .tab-content.active {
     display: block;
 }
 
-/* --- Character Form Styles --- */
-#character-form fieldset {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-#character-form legend {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #5d4037;
-    padding: 0 10px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-/* Grid layout for stats */
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
-}
-
-#character-form input[type="text"], 
-#character-form select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box; /* Include padding in width calculation */
-}
-
-.save-status {
-    text-align: right;
-    font-style: italic;
-    color: #4CAF50;
-    font-size: 0.9em;
-}
-/* --- Rarity Lock Styling (Grayed Out) --- */
-.spell-card.grayed-out {
-    opacity: 0.5;
-    background-color: #f0f0f0;
-    pointer-events: none; /* Prevents interaction with card content */
-    border: 1px dashed #bcaaa4;
-    order: 1; /* Pushes the grayed-out card to the bottom in the flex/grid order */
-}
-
-/* Allow the specific 'Learn Spell' checkbox to be clickable */
-.spell-card.grayed-out .rarity-control {
-    opacity: 1;
-    pointer-events: all; 
-}
-
-/* Style for the Learn Spell label */
-.rarity-control .override-label {
-    color: #f44336; /* Red color for 'Learn' button text */
-    font-weight: bold;
-}
-
-/* Ensure the title remains readable */
-.spell-card.grayed-out h3 {
-    color: #333 !important; 
-}
-
 /* =========================================================================
- * --- FP TRACKER STYLING ---
- * =========================================================================
- */
-.fp-tracker {
-    margin: 15px 0 25px 0;
-    padding: 10px 20px;
-    background-color: #fff8e1; /* Light parchment color */
-    border: 1px solid #d7ccc8;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.1em;
-    font-weight: 500;
-}
-
-.fp-tracker strong {
-    color: #5d4037;
-    margin-right: 10px;
-}
-
-/* FP Tracker Buttons */
-.fp-tracker button {
-    background-color: #5d4037;
-    color: white;
-    border: none;
-    padding: 5px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-    font-size: 1em;
-}
-
-.fp-tracker button:hover:not(:disabled) {
-    background-color: #795548;
-}
-
-/* Specific styling for the Use (-) button */
-#fp-use-btn {
-    background-color: #e57373; /* Reddish for subtraction */
-}
-
-#fp-use-btn:hover:not(:disabled) {
-    background-color: #ef9a9a;
-}
-
-/* Reset button styling */
-#fp-reset-btn {
-    background-color: #4CAF50;
-    margin-left: 10px;
-}
-
-#fp-reset-btn:hover:not(:disabled) {
-    background-color: #66BB6A;
-}
-
-/* Disabled state */
-.fp-tracker button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    color: #666;
-}
-
-/* =========================================================================
- * --- NEW ITEM TAB AND MODAL STYLING ---
- * =========================================================================
- */
-
-/* Item Controls Header */
-.items-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #d7ccc8;
-}
-
-.control-button {
-    background-color: #8d6e63;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s;
-}
-
-.control-button:hover {
-    background-color: #bcaaa4;
-}
-
-/* Item List Grid */
-#item-list {
+   3. SPELL & ITEM CARDS (COLLAPSIBLE LOGIC)
+   ========================================================================= */
+#spell-list, #spell-list-my, #item-list {
     display: grid;
-    gap: 15px;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
-/* Individual Item Card */
-.item-card {
-    background: #ffffff;
-    border: 1px solid #ccc;
-    padding: 15px;
+.spell-card, .item-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 12px;
     border-radius: 8px;
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: transform 0.2s, border-color 0.2s;
 }
 
-.item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px dashed #eee;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
+.spell-card:hover {
+    border-color: var(--accent-copper);
 }
 
-.item-card h3 {
+/* COLLAPSIBLE LOGIC: Hide description by default in All Spells */
+#spell-list .description-block {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 8px; /* Remove vertical padding while closed */
+    margin-top: 0;
+    transition: max-height 0.3s ease-out, padding 0.3s;
+}
+
+/* Expanded State */
+#spell-list .spell-card.expanded .description-block {
+    max-height: 500px; /* Large enough to fit text */
+    padding: 10px 8px;
+    margin-top: 10px;
+}
+
+.spell-card h3 {
     margin: 0;
-    color: #5d4037;
-    font-size: 1.1em;
+    color: var(--accent-gold);
+    font-size: 1rem;
 }
 
-.item-description-block {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 5px;
+.spell-detail {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 3px;
 }
 
-.use-item-btn {
-    background-color: #4CAF50; /* Green for use */
-    color: white;
-    border: none;
-    padding: 5px 10px;
+.description-block {
+    background-color: #252525;
+    border-left: 2px solid var(--accent-copper);
+    font-size: 0.85rem;
     border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85em;
-    transition: background-color 0.2s;
 }
 
-.use-item-btn:hover {
-    background-color: #66BB6A;
-}
-
-
-/* --- MODAL STYLING --- */
-.modal {
-    display: none; 
-    position: fixed; 
-    z-index: 10; 
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgba(0,0,0,0.4); 
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto; /* 10% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; 
-    max-width: 500px;
+/* =========================================================================
+   4. UI CONTROLS & TRACKERS
+   ========================================================================= */
+.controls {
+    background-color: #1a1a1a;
+    padding: 10px;
     border-radius: 8px;
-    position: relative;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column; /* Better for mobile */
+    gap: 8px;
 }
 
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    line-height: 1;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-#item-form textarea {
-    min-height: 80px;
-    resize: vertical;
-}
-
-#save-item-btn {
-    width: 100%;
-    margin-top: 15px;
-    background-color: #5d4037;
+#search-input {
+    background: #000;
     color: white;
-    border: none;
+    border: 1px solid #444;
     padding: 10px;
     border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
 }
 
-#save-item-btn:hover {
-    background-color: #795548;
+.fp-tracker {
+    background-color: #1a1a1a;
+    border: 1px solid var(--accent-copper);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+/* =========================================================================
+   5. BACK TO TOP & BUTTONS
+   ========================================================================= */
+#back-to-top {
+    display: none; 
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+    background-color: var(--accent-gold);
+    color: black;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.use-item-btn, #fp-reset-btn {
+    background-color: var(--accent-magic);
+    color: black;
+    font-weight: bold;
+}
+
+/* =========================================================================
+   6. MOBILE OPTIMIZATION
+   ========================================================================= */
+@media screen and (max-width: 600px) {
+    #spell-list, #spell-list-my, #item-list {
+        grid-template-columns: 1fr; /* Single column on phones */
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns for stats instead of 1 */
+    }
+
+    .tab-button {
+        padding: 10px 10px;
+        font-size: 0.75rem;
+    }
 }
