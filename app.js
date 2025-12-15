@@ -293,8 +293,8 @@ function renderSpellCards(spellsToDisplay, containerId) {
         const card = document.createElement('div');
         card.className = 'spell-card';
         
-        // --- ADDED COLLAPSIBLE LOGIC ---
-        if (containerId === 'spell-list') {
+        // --- UPDATED COLLAPSIBLE LOGIC (NOW INCLUDES BOTH TABS) ---
+        if (containerId === 'spell-list' || containerId === 'spell-list-my') {
             card.addEventListener('click', (e) => {
                 if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
                     card.classList.toggle('expanded');
@@ -342,7 +342,11 @@ function renderSpellCards(spellsToDisplay, containerId) {
         
         const checkbox = card.querySelector('input[type="checkbox"]');
         if (checkbox) {
-            checkbox.addEventListener('change', isMySpellsList ? handleLearnRarityChange : handleOverrideChange);
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation(); // Prevents card from collapsing/expanding when clicking checkbox
+                if(isMySpellsList) handleLearnRarityChange(e);
+                else handleOverrideChange(e);
+            });
         }
     });
 }
