@@ -175,9 +175,14 @@ function getCharacterStats() {
     return data;
 }
 
+function hasHallRequirement(spell) {
+    const req = spell.Requirement || '';
+    return HALLS.some(hall => req.includes(hall));
+}
+
 function checkSingleRequirement(req, character) {
     const parts = req.trim().split(/\s+/);
-    if (parts.length === 1 && HALLS.includes(parts[0])) return character.hall === parts[0];
+    if (parts.length === 1 && HALLS.includes(parts[0])) return false; // Hall requirements no longer auto-meet requirements
     if (parts.length === 2) {
         const statName = parts[0].toLowerCase();
         const requiredValue = parseInt(parts[1]); 
@@ -280,8 +285,8 @@ function renderSpellCards(spellsToDisplay, containerId) {
 
     if (isMySpellsList) {
         sortedSpells.sort((a, b) => {
-            const aIsLocked = (a.Rarity === 'Uncommon' || a.Rarity === 'Rare') && !learnedRaritySpells.has(a['Spell Name']);
-            const bIsLocked = (b.Rarity === 'Uncommon' || b.Rarity === 'Rare') && !learnedRaritySpells.has(b['Spell Name']);
+            const aIsLocked = ((a.Rarity === 'Uncommon' || a.Rarity === 'Rare') || hasHallRequirement(a)) && !learnedRaritySpells.has(a['Spell Name']);
+            const bIsLocked = ((b.Rarity === 'Uncommon' || b.Rarity === 'Rare') || hasHallRequirement(b)) && !learnedRaritySpells.has(b['Spell Name']);
             if (aIsLocked && !bIsLocked) return 1; 
             if (!aIsLocked && bIsLocked) return -1; 
             return 0;
@@ -302,12 +307,12 @@ function renderSpellCards(spellsToDisplay, containerId) {
             });
         }
 
-        const isRarityLocked = (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') && !learnedRaritySpells.has(spellName);
+        const isRarityLocked = ((spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') || hasHallRequirement(spell)) && !learnedRaritySpells.has(spellName);
         if (isMySpellsList && isRarityLocked) card.classList.add('grayed-out');
 
         let checkboxHTML = '';
         if (isMySpellsList) {
-            if (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare') {
+            if (spell.Rarity === 'Uncommon' || spell.Rarity === 'Rare' || hasHallRequirement(spell)) {
                 const isChecked = learnedRaritySpells.has(spellName) ? 'checked' : '';
                 checkboxHTML = `<div class="override-control rarity-control">
                     <input type="checkbox" id="learn-${spellName.replace(/ /g, '-')}" data-spell-name="${spellName}" ${isChecked}>
